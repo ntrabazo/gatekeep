@@ -5,26 +5,27 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Gatekeep · prompt firewall — live demo</title>
 <meta name="description" content="Type a prompt, watch it hit the checkpoint. Gatekeep blocks secrets, redacts PII, and audit-logs every decision. Runs entirely in your browser.">
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' fill='%230a0d10'/%3E%3Cpath d='M8 5h16v13c0 5-4 8-8 9-4-1-8-4-8-9z' fill='none' stroke='%23ffb224' stroke-width='2.5'/%3E%3Cpath d='M12 15h8M16 11v8' stroke='%23ffb224' stroke-width='2.5'/%3E%3C/svg%3E">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' fill='%230b0b0f'/%3E%3Cpath d='M8 5h16v13c0 5-4 8-8 9-4-1-8-4-8-9z' fill='none' stroke='%23c4a35a' stroke-width='2.5'/%3E%3Cpath d='M12 15h8M16 11v8' stroke='%23c4a35a' stroke-width='2.5'/%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@400;500;600;700&family=IBM+Plex+Mono:ital,wght@0,400;0,500;0,600;1,400&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant:ital,wght@0,300;0,400;0,500;1,300;1,400;1,500&family=JetBrains+Mono:wght@300;400;500&family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet">
 <style>
   :root {
-    --bg: #0a0d10;
-    --panel: #10151c;
-    --panel-2: #0c1015;
-    --line: #1c232c;
-    --line-2: #2b3541;
-    --text: #d7dee6;
-    --dim: #8a94a0;
-    --faint: #566170;
-    --steel: #6ea8d8;
-    --block: #ff5c5c;
-    --redact: #ffb224;
-    --allow: #42c37a;
-    --display: "Chakra Petch", "Bahnschrift", "Arial Narrow", sans-serif;
-    --mono: "IBM Plex Mono", "Cascadia Code", Consolas, monospace;
+    --bg: #0b0b0f;
+    --panel: #111118;
+    --panel-2: #0d0d13;
+    --line: rgba(196, 163, 90, 0.12);
+    --line-2: rgba(196, 163, 90, 0.3);
+    --text: #e5e1d6;
+    --dim: #8e8880;
+    --faint: #6b655a;
+    --steel: #c4a35a;
+    --block: #e05e5e;
+    --redact: #e0a83c;
+    --allow: #5cb17c;
+    --display: "Cormorant", Georgia, serif;
+    --mono: "JetBrains Mono", "Cascadia Code", Consolas, monospace;
+    --body: "Outfit", "Segoe UI", sans-serif;
   }
 
   * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -37,9 +38,7 @@
     line-height: 1.55;
     color: var(--text);
     background:
-      radial-gradient(1100px 500px at 70% -10%, rgba(110, 168, 216, 0.06), transparent 60%),
-      linear-gradient(rgba(215, 222, 230, 0.022) 1px, transparent 1px) 0 0 / 100% 34px,
-      linear-gradient(90deg, rgba(215, 222, 230, 0.022) 1px, transparent 1px) 0 0 / 34px 100%,
+      radial-gradient(1100px 500px at 70% -10%, rgba(196, 163, 90, 0.05), transparent 60%),
       var(--bg);
     min-height: 100vh;
   }
@@ -73,19 +72,20 @@
 
   .wordmark {
     font-family: var(--display);
-    font-weight: 700;
-    font-size: 1.7rem;
-    letter-spacing: 0.34em;
-    line-height: 1;
+    font-weight: 300;
+    font-size: 2.3rem;
+    letter-spacing: 0.01em;
+    line-height: 0.95;
   }
+  .wordmark em { font-style: italic; color: var(--steel); }
   .wordmark small {
     display: block;
     font-family: var(--mono);
     font-weight: 400;
-    font-size: 0.68rem;
-    letter-spacing: 0.28em;
+    font-size: 0.62rem;
+    letter-spacing: 0.26em;
     color: var(--dim);
-    margin-top: 6px;
+    margin-top: 7px;
   }
 
   .head-right { margin-left: auto; display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
@@ -108,16 +108,20 @@
   .chip-btn:hover, .repo-link:hover { border-color: var(--line-2); color: var(--text); }
 
   .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--faint); flex: none; }
-  .dot.pass { background: var(--allow); box-shadow: 0 0 8px rgba(66, 195, 122, 0.8); }
-  .dot.fail { background: var(--block); box-shadow: 0 0 8px rgba(255, 92, 92, 0.8); }
+  .dot.pass { background: var(--allow); box-shadow: 0 0 8px rgba(92, 177, 124, 0.8); }
+  .dot.fail { background: var(--block); box-shadow: 0 0 8px rgba(224, 94, 94, 0.8); }
 
   .intro {
+    font-family: var(--body);
+    font-weight: 300;
+    font-size: 0.98rem;
+    line-height: 1.8;
     color: var(--dim);
     max-width: 74ch;
     margin: 16px 0 22px;
     animation: rise 0.5s 0.08s cubic-bezier(0.2, 0.8, 0.2, 1) both;
   }
-  .intro b { color: var(--text); font-weight: 600; }
+  .intro b { color: var(--text); font-weight: 500; }
 
   /* ---------- self-test strip ---------- */
   #selftest-panel {
@@ -137,7 +141,8 @@
   }
   #selftest-panel th { color: var(--faint); font-weight: 400; }
   #selftest-panel td:first-child, #selftest-panel th:first-child { text-align: left; }
-  #selftest-panel .note { color: var(--dim); font-size: 0.8rem; max-width: 80ch; }
+  #selftest-panel .note { font-family: var(--body); font-weight: 300; color: var(--dim); font-size: 0.86rem; line-height: 1.7; max-width: 80ch; }
+  #selftest-panel .note code { font-family: var(--mono); font-size: 0.78rem; }
 
   /* ---------- layout ---------- */
   .layout {
@@ -160,10 +165,11 @@
   .audit-panel { margin-top: 16px; animation: rise 0.5s 0.26s cubic-bezier(0.2, 0.8, 0.2, 1) both; }
 
   .sec-label {
-    font-family: var(--display);
-    font-weight: 600;
-    font-size: 0.78rem;
-    letter-spacing: 0.3em;
+    font-family: var(--mono);
+    font-weight: 400;
+    font-size: 0.66rem;
+    text-transform: uppercase;
+    letter-spacing: 0.24em;
     color: var(--steel);
     display: flex;
     align-items: baseline;
@@ -196,7 +202,7 @@
     position: absolute;
     inset: 0;
     pointer-events: none;
-    background: linear-gradient(180deg, transparent 20%, rgba(110, 168, 216, 0.22) 50%, transparent 80%);
+    background: linear-gradient(180deg, transparent 20%, rgba(196, 163, 90, 0.22) 50%, transparent 80%);
     transform: translateY(-100%);
     animation: sweep 0.38s linear both;
   }
@@ -229,20 +235,21 @@
 
   .send-row { display: flex; align-items: center; gap: 14px; }
   #send {
-    font-family: var(--display);
-    font-weight: 600;
-    font-size: 0.92rem;
-    letter-spacing: 0.22em;
-    color: var(--bg);
-    background: var(--text);
-    border: 1px solid var(--text);
-    padding: 12px 22px;
+    font-family: var(--mono);
+    font-weight: 500;
+    font-size: 0.68rem;
+    text-transform: uppercase;
+    letter-spacing: 0.2em;
+    color: var(--steel);
+    background: transparent;
+    border: 1px solid rgba(196, 163, 90, 0.45);
+    padding: 13px 24px;
     cursor: pointer;
-    transition: background 0.15s, transform 0.06s;
+    transition: background 0.15s, color 0.15s, transform 0.06s;
   }
-  #send:hover { background: #fff; }
+  #send:hover { background: var(--steel); color: var(--bg); }
   #send:active { transform: translateY(1px); }
-  #send:disabled { background: var(--line-2); border-color: var(--line-2); color: var(--faint); cursor: not-allowed; }
+  #send:disabled { background: transparent; border-color: var(--line); color: var(--faint); cursor: not-allowed; }
   .kbd-hint { color: var(--faint); font-size: 0.72rem; }
 
   /* ---------- decision panel ---------- */
@@ -257,11 +264,11 @@
   .verdict-row { display: flex; align-items: center; gap: 22px; flex-wrap: wrap; margin-bottom: 16px; }
 
   .stamp {
-    font-family: var(--display);
-    font-weight: 700;
-    font-size: clamp(2rem, 3.6vw, 2.9rem);
+    font-family: var(--mono);
+    font-weight: 500;
+    font-size: clamp(1.8rem, 3.2vw, 2.6rem);
     line-height: 1;
-    letter-spacing: 0.2em;
+    letter-spacing: 0.22em;
     padding: 0.18em 0.5em 0.18em 0.7em;
     border: 3px solid currentColor;
     outline: 1px solid currentColor;
@@ -286,7 +293,7 @@
 
   .errbody {
     background: var(--panel-2);
-    border: 1px solid rgba(255, 92, 92, 0.3);
+    border: 1px solid rgba(224, 94, 94, 0.3);
     color: var(--dim);
     font-size: 0.76rem;
     padding: 10px 12px;
@@ -336,8 +343,8 @@
     word-break: break-word;
   }
   .modelview.blocked {
-    background: repeating-linear-gradient(-45deg, rgba(255, 92, 92, 0.06) 0 10px, transparent 10px 20px), var(--panel-2);
-    border-color: rgba(255, 92, 92, 0.35);
+    background: repeating-linear-gradient(-45deg, rgba(224, 94, 94, 0.06) 0 10px, transparent 10px 20px), var(--panel-2);
+    border-color: rgba(224, 94, 94, 0.35);
     color: var(--dim);
     text-align: center;
     display: flex;
@@ -348,16 +355,16 @@
   }
   .modelview.idle { color: var(--faint); border-style: dashed; }
   mark.redaction {
-    background: #191106;
+    background: #181206;
     color: var(--redact);
-    border: 1px solid rgba(255, 178, 36, 0.55);
+    border: 1px solid rgba(224, 168, 60, 0.55);
     padding: 0 0.35em;
     font-weight: 600;
     font-size: 0.82em;
     letter-spacing: 0.04em;
     white-space: nowrap;
   }
-  .mv-caption { color: var(--faint); font-size: 0.74rem; margin-top: 8px; }
+  .mv-caption { font-family: var(--body); font-weight: 300; color: var(--dim); font-size: 0.8rem; margin-top: 8px; }
 
   /* ---------- audit ---------- */
   .table-scroll { overflow-x: auto; }
@@ -379,15 +386,15 @@
     white-space: nowrap;
   }
   .audit-table tr.fresh td { animation: flash 1.1s ease both; }
-  @keyframes flash { from { background: rgba(110, 168, 216, 0.12); } to { background: transparent; } }
+  @keyframes flash { from { background: rgba(196, 163, 90, 0.12); } to { background: transparent; } }
   .audit-table .act { font-weight: 600; letter-spacing: 0.08em; }
   .audit-table .act.block { color: var(--block); }
   .audit-table .act.redact { color: var(--redact); }
   .audit-table .act.allow { color: var(--allow); }
   .audit-table .hash { color: var(--faint); }
   .audit-empty { color: var(--faint); font-size: 0.8rem; padding: 14px 0 4px; }
-  .audit-note { color: var(--faint); font-size: 0.74rem; margin-top: 12px; max-width: 90ch; }
-  .audit-note b { color: var(--dim); }
+  .audit-note { font-family: var(--body); font-weight: 300; color: var(--dim); font-size: 0.84rem; line-height: 1.7; margin-top: 12px; max-width: 90ch; }
+  .audit-note b { color: var(--text); font-weight: 500; }
 
   /* ---------- footer ---------- */
   footer {
@@ -419,12 +426,13 @@
   <header>
     <div class="mark" aria-hidden="true">
       <svg width="40" height="40" viewBox="0 0 32 32" fill="none">
-        <path d="M8 5h16v13c0 5-4 8-8 9-4-1-8-4-8-9z" stroke="#ffb224" stroke-width="2"/>
-        <path d="M12 15h8M16 11v8" stroke="#ffb224" stroke-width="2"/>
+        <path d="M8 5h16v13c0 5-4 8-8 9-4-1-8-4-8-9z" stroke="#c4a35a" stroke-width="2"/>
+        <path d="M12 15h8M16 11v8" stroke="#c4a35a" stroke-width="2"/>
       </svg>
     </div>
-    <h1 class="wordmark">GATEKEEP<small>PROMPT FIREWALL · LIVE DEMO</small></h1>
+    <h1 class="wordmark"><em>Gatekeep</em><small>PROMPT FIREWALL · LIVE DEMO</small></h1>
     <div class="head-right">
+      <a class="repo-link" href="https://nicolastrabazo.com/">← PORTFOLIO</a>
       <button class="chip-btn" id="selftest-chip" aria-expanded="false" aria-controls="selftest-panel">
         <span class="dot" id="selftest-dot"></span><span id="selftest-text">SELF-TEST …</span>
       </button>
