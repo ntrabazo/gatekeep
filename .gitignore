@@ -1,0 +1,23 @@
+# Python
+.venv/
+__pycache__/
+*.pyc
+
+# Runtime data — never commit
+audit.db
+audit.db-wal
+audit.db-shm
+.env
+
+# Local tooling / editor state
+.claude/
+.wrangler/
+
+# Stray local files
+download.txt
+
+# Internal build-process docs — kept locally, not part of the published product
+CLAUDE.md
+PLAN.md
+ORCHESTRATION.md
+memory.md

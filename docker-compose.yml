@@ -1,0 +1,15 @@
+services:
+  gatekeep:
+    build: .
+    ports:
+      - "8100:8100"
+    # Mount your policy file read-only so you can edit rules without rebuilding the
+    # image — restart the container to pick up changes.
+    volumes:
+      - ./policies.yaml:/app/policies.yaml:ro
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "python", "-c", "import httpx; httpx.get('http://127.0.0.1:8100/health').raise_for_status()"]
+      interval: 30s
+      timeout: 3s
+      retries: 3

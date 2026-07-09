@@ -1,0 +1,11 @@
+# Optional: the Presidio NER detection layer (names, locations, and other entities
+# the regex/entropy detectors can't see). Off by default — only install this if you
+# set `presidio.enabled: true` in policies.yaml.
+#
+# Requires Python 3.12 (spaCy pins exclude 3.13+). After installing these, download
+# the small English model once:
+#
+#     python -m spacy download en_core_web_sm
+#
+presidio-analyzer==2.2.363
+presidio-anonymizer==2.2.363

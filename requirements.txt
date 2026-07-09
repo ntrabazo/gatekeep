@@ -1,0 +1,8 @@
+# Gatekeep core runtime — everything the proxy needs to run.
+# The optional Presidio NER layer has its own file: requirements-optional.txt
+anthropic==0.116.0
+fastapi==0.139.0
+httpx==0.28.1
+pydantic==2.13.4
+PyYAML==6.0.3
+uvicorn==0.50.2

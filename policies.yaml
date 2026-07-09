@@ -1,0 +1,13 @@
+version: 1
+on_parse_failure: block          # block | allow — what to do when the request body can't be parsed
+entropy:
+  min_length: 20
+  threshold: 4.0
+presidio:
+  enabled: false
+rules:                           # first match wins, by finding category
+  - {category: secret, action: block}
+  - {category: pii,    action: redact}
+default_action: allow
+routing:                         # `when` values are exactly Decision.action values
+  - {when: redact, model: claude-haiku-4-5-20251001}   # sensitive -> cheap model

@@ -1,0 +1,12 @@
+.venv/
+__pycache__/
+*.pyc
+audit.db
+audit.db-wal
+audit.db-shm
+.env
+.git/
+.claude/
+harness/
+docs/
+*.md
