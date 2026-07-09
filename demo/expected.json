@@ -1,0 +1,861 @@
+[
+ {
+  "text": "deploy the stack with AKIAIOSFODNN7EXAMPLE as the access key",
+  "label": "secret",
+  "expect": "block",
+  "action": "block",
+  "redacted": "deploy the stack with AKIAIOSFODNN7EXAMPLE as the access key",
+  "categories": "secret",
+  "detectors": "aws_access_key",
+  "sha256": "0d2a08d19500740ec36b73a596b5d5283452018e5073a4d4367943522d1649a9",
+  "findings": [
+   {
+    "category": "secret",
+    "detector": "aws_access_key",
+    "span": [
+     22,
+     42
+    ],
+    "preview": "AKIA…"
+   }
+  ]
+ },
+ {
+  "text": "aws_access_key_id = AKIAI44QH8DHBEXAMPLE",
+  "label": "secret",
+  "expect": "block",
+  "action": "block",
+  "redacted": "aws_access_key_id = AKIAI44QH8DHBEXAMPLE",
+  "categories": "secret",
+  "detectors": "aws_access_key",
+  "sha256": "b1509272bbfe67aef1665e6e00798270477d8fe64fe939b41392e68d29dfe752",
+  "findings": [
+   {
+    "category": "secret",
+    "detector": "aws_access_key",
+    "span": [
+     20,
+     40
+    ],
+    "preview": "AKIA…"
+   }
+  ]
+ },
+ {
+  "text": "hey can you check why AKIAJQR7XWZ3KAEXAMPL is getting throttled",
+  "label": "secret",
+  "expect": "block",
+  "action": "block",
+  "redacted": "hey can you check why AKIAJQR7XWZ3KAEXAMPL is getting throttled",
+  "categories": "secret",
+  "detectors": "aws_access_key",
+  "sha256": "159aafa41894622af4f94ca292bc362354f10d7e299076700631f38eca79fffa",
+  "findings": [
+   {
+    "category": "secret",
+    "detector": "aws_access_key",
+    "span": [
+     22,
+     42
+    ],
+    "preview": "AKIA…"
+   }
+  ]
+ },
+ {
+  "text": "use ghp_A1b2C3d4E5f6G7h8I9j0K1l2M3n4O5p6Q7r8 to clone the private repo",
+  "label": "secret",
+  "expect": "block",
+  "action": "block",
+  "redacted": "use ghp_A1b2C3d4E5f6G7h8I9j0K1l2M3n4O5p6Q7r8 to clone the private repo",
+  "categories": "secret",
+  "detectors": "github_token",
+  "sha256": "7a92870c50f607ed77ec41aab71aee6a587eb0b41b4a1a1ff6ee5d6b6eebd503",
+  "findings": [
+   {
+    "category": "secret",
+    "detector": "github_token",
+    "span": [
+     4,
+     44
+    ],
+    "preview": "ghp_…"
+   }
+  ]
+ },
+ {
+  "text": "GITHUB_TOKEN=gho_Zz9Yy8Xx7Ww6Vv5Uu4Tt3Ss2Rr1Qq0Pp9Oo8",
+  "label": "secret",
+  "expect": "block",
+  "action": "block",
+  "redacted": "GITHUB_TOKEN=gho_Zz9Yy8Xx7Ww6Vv5Uu4Tt3Ss2Rr1Qq0Pp9Oo8",
+  "categories": "secret",
+  "detectors": "github_token",
+  "sha256": "f467ba35f69ae1708ac6b71c4815d381f3c689a19b31e0ca9405c315d5fb75e9",
+  "findings": [
+   {
+    "category": "secret",
+    "detector": "github_token",
+    "span": [
+     13,
+     53
+    ],
+    "preview": "gho_…"
+   }
+  ]
+ },
+ {
+  "text": "the bot token is xoxb-2952968454722-3893814986amAeKFimJoeSDmCyXBEbkYnW",
+  "label": "secret",
+  "expect": "block",
+  "action": "block",
+  "redacted": "the bot token is xoxb-2952968454722-3893814986amAeKFimJoeSDmCyXBEbkYnW",
+  "categories": "secret",
+  "detectors": "slack_token",
+  "sha256": "fb80d7ca9fda342afb6899d971db1e7f59b5c179e9d93470d3b9e1dabf475876",
+  "findings": [
+   {
+    "category": "secret",
+    "detector": "slack_token",
+    "span": [
+     17,
+     70
+    ],
+    "preview": "xoxb…"
+   }
+  ]
+ },
+ {
+  "text": "slack user token: xoxp-8842571033-1954128374-ZfLqPwRnTgYbVs",
+  "label": "secret",
+  "expect": "block",
+  "action": "block",
+  "redacted": "slack user token: xoxp-8842571033-1954128374-ZfLqPwRnTgYbVs",
+  "categories": "secret",
+  "detectors": "slack_token",
+  "sha256": "07aa54e833f349b6c93e2bc945cff5c6e0db817485d256d27aa14297ce54357b",
+  "findings": [
+   {
+    "category": "secret",
+    "detector": "slack_token",
+    "span": [
+     18,
+     59
+    ],
+    "preview": "xoxp…"
+   }
+  ]
+ },
+ {
+  "text": "-----BEGIN RSA PRIVATE KEY----- MIIEpAIBAAKCAQEA7",
+  "label": "secret",
+  "expect": "block",
+  "action": "block",
+  "redacted": "-----BEGIN RSA PRIVATE KEY----- MIIEpAIBAAKCAQEA7",
+  "categories": "secret",
+  "detectors": "private_key",
+  "sha256": "7f0b6e833905dd669af4448861122d7899d2bb2594b24540aad121cd9b1d3352",
+  "findings": [
+   {
+    "category": "secret",
+    "detector": "private_key",
+    "span": [
+     0,
+     31
+    ],
+    "preview": "----…"
+   }
+  ]
+ },
+ {
+  "text": "paste this into id_ed25519: -----BEGIN OPENSSH PRIVATE KEY-----",
+  "label": "secret",
+  "expect": "block",
+  "action": "block",
+  "redacted": "paste this into id_ed25519: -----BEGIN OPENSSH PRIVATE KEY-----",
+  "categories": "secret",
+  "detectors": "private_key",
+  "sha256": "401ecb1c278df52ffa636f9a7bf2dcdd8f48328dbcfa558faed74a966cc89ee6",
+  "findings": [
+   {
+    "category": "secret",
+    "detector": "private_key",
+    "span": [
+     28,
+     63
+    ],
+    "preview": "----…"
+   }
+  ]
+ },
+ {
+  "text": "the session jwt is eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIn0.dozjgNryP4J3jVmNHl0w5N_XgL0n3I9PlFUP0THsR8U",
+  "label": "secret",
+  "expect": "block",
+  "action": "block",
+  "redacted": "the session jwt is eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIn0.dozjgNryP4J3jVmNHl0w5N_XgL0n3I9PlFUP0THsR8U",
+  "categories": "secret",
+  "detectors": "jwt",
+  "sha256": "c31001685ab366246495b4a8f8f05e2f1057f5624afab13903ed7c61e7a8dc0b",
+  "findings": [
+   {
+    "category": "secret",
+    "detector": "jwt",
+    "span": [
+     19,
+     127
+    ],
+    "preview": "eyJh…"
+   }
+  ]
+ },
+ {
+  "text": "curl -H 'Authorization: Bearer eyJhbGciOiJSUzI1NiJ9.eyJyb2xlIjoiYWRtaW4ifQ.Sfl_KxwRJSMeKKF2QT4fwpMeJf36POk6yJVadQsw5c0' api.internal",
+  "label": "secret",
+  "expect": "block",
+  "action": "block",
+  "redacted": "curl -H 'Authorization: Bearer eyJhbGciOiJSUzI1NiJ9.eyJyb2xlIjoiYWRtaW4ifQ.Sfl_KxwRJSMeKKF2QT4fwpMeJf36POk6yJVadQsw5c0' api.internal",
+  "categories": "secret",
+  "detectors": "jwt",
+  "sha256": "ee055368c08eb495cf18316f6ec29d18fc90d9f2fc91f41271cf31fcb8b49041",
+  "findings": [
+   {
+    "category": "secret",
+    "detector": "jwt",
+    "span": [
+     31,
+     118
+    ],
+    "preview": "eyJh…"
+   }
+  ]
+ },
+ {
+  "text": "why does eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpYXQiOjE3MTk0NDQwMDB9.h4nDl3rTw9kYzXqPv2mB8cJ6fL0gS5aE1uI7oR3nM9k keep expiring",
+  "label": "secret",
+  "expect": "block",
+  "action": "block",
+  "redacted": "why does eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpYXQiOjE3MTk0NDQwMDB9.h4nDl3rTw9kYzXqPv2mB8cJ6fL0gS5aE1uI7oR3nM9k keep expiring",
+  "categories": "secret",
+  "detectors": "jwt",
+  "sha256": "f80ea70eb764e87486cb7898005f767993d419682f93dc0ca8b6c085f519be15",
+  "findings": [
+   {
+    "category": "secret",
+    "detector": "jwt",
+    "span": [
+     9,
+     114
+    ],
+    "preview": "eyJ0…"
+   }
+  ]
+ },
+ {
+  "text": "the signing secret is 9fK2mQ8xW3nR7pL5vB1zT6hY4cJ0sD8gA2eU5iO7 rotate it monthly",
+  "label": "secret",
+  "expect": "block",
+  "action": "block",
+  "redacted": "the signing secret is 9fK2mQ8xW3nR7pL5vB1zT6hY4cJ0sD8gA2eU5iO7 rotate it monthly",
+  "categories": "secret",
+  "detectors": "entropy",
+  "sha256": "7e2a4201913b70eea9d94634ba93db12a25d9d173154c859647b0726c3547786",
+  "findings": [
+   {
+    "category": "secret",
+    "detector": "entropy",
+    "span": [
+     22,
+     62
+    ],
+    "preview": "9fK2…"
+   }
+  ]
+ },
+ {
+  "text": "DB_ENCRYPTION_KEY=Zx91kPq3Vm7Yw2Rt5Nb8Lc4Js6Hd0Fg1Ka9Se3Ui",
+  "label": "secret",
+  "expect": "block",
+  "action": "block",
+  "redacted": "DB_ENCRYPTION_KEY=Zx91kPq3Vm7Yw2Rt5Nb8Lc4Js6Hd0Fg1Ka9Se3Ui",
+  "categories": "secret",
+  "detectors": "entropy",
+  "sha256": "39e01840d63dd4b93addddebd6d5288806db0812e9b02917fc16cff49ae3f0a4",
+  "findings": [
+   {
+    "category": "secret",
+    "detector": "entropy",
+    "span": [
+     0,
+     58
+    ],
+    "preview": "DB_E…"
+   }
+  ]
+ },
+ {
+  "text": "here is the api secret qW4eR6tY8uI0oP2aS5dF7gH9jK1lZ3xC6vB8nM0q keep it safe",
+  "label": "secret",
+  "expect": "block",
+  "action": "block",
+  "redacted": "here is the api secret qW4eR6tY8uI0oP2aS5dF7gH9jK1lZ3xC6vB8nM0q keep it safe",
+  "categories": "secret",
+  "detectors": "entropy",
+  "sha256": "e925200e524a20172e6ce9badfbd539f61a4d28823191d70628e348cc474f664",
+  "findings": [
+   {
+    "category": "secret",
+    "detector": "entropy",
+    "span": [
+     23,
+     63
+    ],
+    "preview": "qW4e…"
+   }
+  ]
+ },
+ {
+  "text": "my social is 219-09-9999 for the background check",
+  "label": "pii",
+  "expect": "redact",
+  "action": "redact",
+  "redacted": "my social is [REDACTED:PII] for the background check",
+  "categories": "pii",
+  "detectors": "ssn",
+  "sha256": "ba0c84925f6ca558ede5882071b9aecd7d2041dcb4d8b34ba4d4fc45c4c6c306",
+  "findings": [
+   {
+    "category": "pii",
+    "detector": "ssn",
+    "span": [
+     13,
+     24
+    ],
+    "preview": "219-…"
+   }
+  ]
+ },
+ {
+  "text": "employee ssn 457-55-5462 needs updating in workday",
+  "label": "pii",
+  "expect": "redact",
+  "action": "redact",
+  "redacted": "employee ssn [REDACTED:PII] needs updating in workday",
+  "categories": "pii",
+  "detectors": "ssn",
+  "sha256": "28c3b69c775216b234b5230e956e979e75926afa4e15c0cff1cb6966422513e0",
+  "findings": [
+   {
+    "category": "pii",
+    "detector": "ssn",
+    "span": [
+     13,
+     24
+    ],
+    "preview": "457-…"
+   }
+  ]
+ },
+ {
+  "text": "the form lists 078-05-1120 as the taxpayer id",
+  "label": "pii",
+  "expect": "redact",
+  "action": "redact",
+  "redacted": "the form lists [REDACTED:PII] as the taxpayer id",
+  "categories": "pii",
+  "detectors": "ssn",
+  "sha256": "9308fa5c17395ca0677846835e33839f2e5d4cd9e04eefed2dc368e0404cfe93",
+  "findings": [
+   {
+    "category": "pii",
+    "detector": "ssn",
+    "span": [
+     15,
+     26
+    ],
+    "preview": "078-…"
+   }
+  ]
+ },
+ {
+  "text": "verify 612-20-6789 against the payroll record",
+  "label": "pii",
+  "expect": "redact",
+  "action": "redact",
+  "redacted": "verify [REDACTED:PII] against the payroll record",
+  "categories": "pii",
+  "detectors": "ssn",
+  "sha256": "ad2ba037ddb9a4195bec381f278eb8e5284bc4810d6da200c414ab2c78ef15fa",
+  "findings": [
+   {
+    "category": "pii",
+    "detector": "ssn",
+    "span": [
+     7,
+     18
+    ],
+    "preview": "612-…"
+   }
+  ]
+ },
+ {
+  "text": "charge card 4111111111111111 for the renewal",
+  "label": "pii",
+  "expect": "redact",
+  "action": "redact",
+  "redacted": "charge card [REDACTED:PII] for the renewal",
+  "categories": "pii",
+  "detectors": "credit_card",
+  "sha256": "473e26928ec9427ae2c69a692f3f0c4d17a539ceed970454c5870a4e801d05c1",
+  "findings": [
+   {
+    "category": "pii",
+    "detector": "credit_card",
+    "span": [
+     12,
+     28
+    ],
+    "preview": "4111…"
+   }
+  ]
+ },
+ {
+  "text": "customer paid with 5555555555554444 yesterday",
+  "label": "pii",
+  "expect": "redact",
+  "action": "redact",
+  "redacted": "customer paid with [REDACTED:PII] yesterday",
+  "categories": "pii",
+  "detectors": "credit_card",
+  "sha256": "d4a3305949bbbd0dc9f4dd9856ba900ffb06e9629e46b221a0b83520e559c34b",
+  "findings": [
+   {
+    "category": "pii",
+    "detector": "credit_card",
+    "span": [
+     19,
+     35
+    ],
+    "preview": "5555…"
+   }
+  ]
+ },
+ {
+  "text": "amex on file: 378282246310005 exp 09/27",
+  "label": "pii",
+  "expect": "redact",
+  "action": "redact",
+  "redacted": "amex on file: [REDACTED:PII] exp 09/27",
+  "categories": "pii",
+  "detectors": "credit_card",
+  "sha256": "b17f718f32acced5469a21541ca798e5d8bf741fca348fe83ea6f007dda92835",
+  "findings": [
+   {
+    "category": "pii",
+    "detector": "credit_card",
+    "span": [
+     14,
+     29
+    ],
+    "preview": "3782…"
+   }
+  ]
+ },
+ {
+  "text": "refund 4012888888881881 the full amount",
+  "label": "pii",
+  "expect": "redact",
+  "action": "redact",
+  "redacted": "refund [REDACTED:PII] the full amount",
+  "categories": "pii",
+  "detectors": "credit_card",
+  "sha256": "fa1bdda7de60d39ef93b1903dfb08a38092d56db5f59603f0e0fb32edb6692d3",
+  "findings": [
+   {
+    "category": "pii",
+    "detector": "credit_card",
+    "span": [
+     7,
+     23
+    ],
+    "preview": "4012…"
+   }
+  ]
+ },
+ {
+  "text": "email the contract to jane.doe@example.com today",
+  "label": "pii",
+  "expect": "redact",
+  "action": "redact",
+  "redacted": "email the contract to [REDACTED:PII] today",
+  "categories": "pii",
+  "detectors": "email",
+  "sha256": "271bf677013fd48df9ac40f98f56b26bd754ad7c0a869a9af93e7380d34f2e4d",
+  "findings": [
+   {
+    "category": "pii",
+    "detector": "email",
+    "span": [
+     22,
+     42
+    ],
+    "preview": "jane…"
+   }
+  ]
+ },
+ {
+  "text": "cc support+billing@acme.io on the invoice thread",
+  "label": "pii",
+  "expect": "redact",
+  "action": "redact",
+  "redacted": "cc [REDACTED:PII] on the invoice thread",
+  "categories": "pii",
+  "detectors": "email",
+  "sha256": "8a11d9923587ce3f38a07b79871f5f475c635f493fb378d08f593a90b6ee7e2c",
+  "findings": [
+   {
+    "category": "pii",
+    "detector": "email",
+    "span": [
+     3,
+     26
+    ],
+    "preview": "supp…"
+   }
+  ]
+ },
+ {
+  "text": "his personal address is mike.rivera1988@gmail.com not the work one",
+  "label": "pii",
+  "expect": "redact",
+  "action": "redact",
+  "redacted": "his personal address is [REDACTED:PII] not the work one",
+  "categories": "pii",
+  "detectors": "email",
+  "sha256": "45a549dfb0f2a6f98d3cab31995b0236feac5879e75bc5d8684cad23128b7bb5",
+  "findings": [
+   {
+    "category": "pii",
+    "detector": "email",
+    "span": [
+     24,
+     49
+    ],
+    "preview": "mike…"
+   }
+  ]
+ },
+ {
+  "text": "call me at (404) 555-0142 after lunch",
+  "label": "pii",
+  "expect": "redact",
+  "action": "redact",
+  "redacted": "call me at [REDACTED:PII] after lunch",
+  "categories": "pii",
+  "detectors": "phone",
+  "sha256": "c730efc5920bcf2b6e8d0f02b05f9f40ab79c0037d9dbd59aac2fa93519263d1",
+  "findings": [
+   {
+    "category": "pii",
+    "detector": "phone",
+    "span": [
+     11,
+     25
+    ],
+    "preview": "(404…"
+   }
+  ]
+ },
+ {
+  "text": "the on-call number is 678-555-0199 this week",
+  "label": "pii",
+  "expect": "redact",
+  "action": "redact",
+  "redacted": "the on-call number is [REDACTED:PII] this week",
+  "categories": "pii",
+  "detectors": "phone",
+  "sha256": "396e0e57c1afa42225cd538e55d25d842e4d8120bdd36604ad89e3056cf56e71",
+  "findings": [
+   {
+    "category": "pii",
+    "detector": "phone",
+    "span": [
+     22,
+     34
+    ],
+    "preview": "678-…"
+   }
+  ]
+ },
+ {
+  "text": "text +1 404-555-0117 if the deploy breaks",
+  "label": "pii",
+  "expect": "redact",
+  "action": "redact",
+  "redacted": "text [REDACTED:PII] if the deploy breaks",
+  "categories": "pii",
+  "detectors": "phone",
+  "sha256": "15ae17a41939aa58985168b16f77b365c8c152c82c1442c77000d6162ac1f266",
+  "findings": [
+   {
+    "category": "pii",
+    "detector": "phone",
+    "span": [
+     5,
+     20
+    ],
+    "preview": "+1 4…"
+   }
+  ]
+ },
+ {
+  "text": "candidate: ssn 219-09-9999, contact hr.intake@example.org",
+  "label": "pii",
+  "expect": "redact",
+  "action": "redact",
+  "redacted": "candidate: ssn [REDACTED:PII], contact [REDACTED:PII]",
+  "categories": "pii",
+  "detectors": "email,ssn",
+  "sha256": "62f2b0fe891af1e852b8be5736673197cec713d15e590f03b67c069fc735487e",
+  "findings": [
+   {
+    "category": "pii",
+    "detector": "ssn",
+    "span": [
+     15,
+     26
+    ],
+    "preview": "219-…"
+   },
+   {
+    "category": "pii",
+    "detector": "email",
+    "span": [
+     36,
+     57
+    ],
+    "preview": "hr.i…"
+   }
+  ]
+ },
+ {
+  "text": "the quick brown fox jumps over the lazy dog",
+  "label": "clean",
+  "expect": "allow",
+  "action": "allow",
+  "redacted": "the quick brown fox jumps over the lazy dog",
+  "categories": "",
+  "detectors": "",
+  "sha256": "05c6e08f1d9fdafa03147fcb8f82f124c76d2f70e3d989dc8aadb5e7d7450bec",
+  "findings": []
+ },
+ {
+  "text": "summarize this meeting agenda and list the action items",
+  "label": "clean",
+  "expect": "allow",
+  "action": "allow",
+  "redacted": "summarize this meeting agenda and list the action items",
+  "categories": "",
+  "detectors": "",
+  "sha256": "2fbb1efb1fa4b49986b80309c840f26bd1407e9ece5864ed1cd704ea1e9c3528",
+  "findings": []
+ },
+ {
+  "text": "see https://docs.python.org/3/library/re.html for the regex syntax",
+  "label": "clean",
+  "expect": "allow",
+  "action": "allow",
+  "redacted": "see https://docs.python.org/3/library/re.html for the regex syntax",
+  "categories": "",
+  "detectors": "",
+  "sha256": "23aeb9a6df24671104a3eeed8f465beab5c3e29eae7884f5e6c0a7609f60e0f7",
+  "findings": []
+ },
+ {
+  "text": "tracking issue: https://github.com/microsoft/presidio/issues/1655",
+  "label": "clean",
+  "expect": "allow",
+  "action": "allow",
+  "redacted": "tracking issue: https://github.com/microsoft/presidio/issues/1655",
+  "categories": "",
+  "detectors": "",
+  "sha256": "fa1f329ad8b15424f09c3300af72717da340da4ecfca3fccb7e7fcdd0c934459",
+  "findings": []
+ },
+ {
+  "text": "commit 3f2b8c9d4e5a6f7081920a3b4c5d6e7f8091a2b3 broke the build",
+  "label": "clean",
+  "expect": "allow",
+  "action": "allow",
+  "redacted": "commit 3f2b8c9d4e5a6f7081920a3b4c5d6e7f8091a2b3 broke the build",
+  "categories": "",
+  "detectors": "",
+  "sha256": "efeadb6a45bba07d72ee21177ab4bf009c0b5a3cb77b8e16b0a27c8e7ae0fe56",
+  "findings": []
+ },
+ {
+  "text": "request id 550e8400-e29b-41d4-a716-446655440000 timed out",
+  "label": "clean",
+  "expect": "allow",
+  "action": "allow",
+  "redacted": "request id 550e8400-e29b-41d4-a716-446655440000 timed out",
+  "categories": "",
+  "detectors": "",
+  "sha256": "9f8c4308e8e6d763d25d210a07ea618ee84b53b3347832a65cb5b49ca9ac84f5",
+  "findings": []
+ },
+ {
+  "text": "the header value was dGVzdCBzdHJpbmc= after encoding",
+  "label": "clean",
+  "expect": "allow",
+  "action": "allow",
+  "redacted": "the header value was dGVzdCBzdHJpbmc= after encoding",
+  "categories": "",
+  "detectors": "",
+  "sha256": "d22f7aaa692667fa559db4af55e23d142014d65703e5f9529e55746cb005b877",
+  "findings": []
+ },
+ {
+  "text": "for i in range(10): print(i**2)",
+  "label": "clean",
+  "expect": "allow",
+  "action": "allow",
+  "redacted": "for i in range(10): print(i**2)",
+  "categories": "",
+  "detectors": "",
+  "sha256": "078ceb2bbd1529be6f1e32508d898e6dbc2d15fda62ba0c2a77efd974a6d1849",
+  "findings": []
+ },
+ {
+  "text": "const total = items.reduce((a, b) => a + b.price, 0);",
+  "label": "clean",
+  "expect": "allow",
+  "action": "allow",
+  "redacted": "const total = items.reduce((a, b) => a + b.price, 0);",
+  "categories": "",
+  "detectors": "",
+  "sha256": "0a367c9c4b3074ebaee8280107ae9d823614d8597c4a983039e5b79aead4a1c4",
+  "findings": []
+ },
+ {
+  "text": "test card 1234567890123456 should be rejected by the gateway",
+  "label": "clean",
+  "expect": "allow",
+  "action": "allow",
+  "redacted": "test card 1234567890123456 should be rejected by the gateway",
+  "categories": "",
+  "detectors": "",
+  "sha256": "2002634e982cf8255537c32658d7d368fd5a56339f5957013379c05ffc0dc2da",
+  "findings": []
+ },
+ {
+  "text": "customer id 4045550123 has two open tickets",
+  "label": "clean",
+  "expect": "allow",
+  "action": "allow",
+  "redacted": "customer id 4045550123 has two open tickets",
+  "categories": "",
+  "detectors": "",
+  "sha256": "ed52dd7c22a89a8ebc7dbca1136a1c50081a0ccbbe3fa48ce34dfeb4fd70c68d",
+  "findings": []
+ },
+ {
+  "text": "the placeholder ssn 000-12-3456 is used in all our fixtures",
+  "label": "clean",
+  "expect": "allow",
+  "action": "allow",
+  "redacted": "the placeholder ssn 000-12-3456 is used in all our fixtures",
+  "categories": "",
+  "detectors": "",
+  "sha256": "af7857fe25f2a0a51b0e0bfc30487a4dd825a21c4dd30fda96f13a10d1df690b",
+  "findings": []
+ },
+ {
+  "text": "666-12-3456 is not a real social security number",
+  "label": "clean",
+  "expect": "allow",
+  "action": "allow",
+  "redacted": "666-12-3456 is not a real social security number",
+  "categories": "",
+  "detectors": "",
+  "sha256": "a9ecdbe95961e58e808f071fee8e7572bf96a55514af338babe518ca40e97b70",
+  "findings": []
+ },
+ {
+  "text": "release v2.13.4 shipped on 2026-07-07 with the hotfix",
+  "label": "clean",
+  "expect": "allow",
+  "action": "allow",
+  "redacted": "release v2.13.4 shipped on 2026-07-07 with the hotfix",
+  "categories": "",
+  "detectors": "",
+  "sha256": "f8ee6b37b9a57c2a95942233e49c352ddd971bfb2a7a66fbe8b2128ab7b12a5d",
+  "findings": []
+ },
+ {
+  "text": "order 4111 shipped, invoice 1111 is still unpaid",
+  "label": "clean",
+  "expect": "allow",
+  "action": "allow",
+  "redacted": "order 4111 shipped, invoice 1111 is still unpaid",
+  "categories": "",
+  "detectors": "",
+  "sha256": "3625d12dc241c15a7486707dd142d1bf6711cd732df0fa3bad59751345a5c96f",
+  "findings": []
+ },
+ {
+  "text": "how do I rotate AWS access keys without downtime",
+  "label": "clean",
+  "expect": "allow",
+  "action": "allow",
+  "redacted": "how do I rotate AWS access keys without downtime",
+  "categories": "",
+  "detectors": "",
+  "sha256": "0d767da1c4039acb192e3fcfbfc7e1ada7ef4f2ecaf0affb89502135bd90108d",
+  "findings": []
+ },
+ {
+  "text": "the API returned 403 forbidden on every retry",
+  "label": "clean",
+  "expect": "allow",
+  "action": "allow",
+  "redacted": "the API returned 403 forbidden on every retry",
+  "categories": "",
+  "detectors": "",
+  "sha256": "14893869e70ab90ed26e74c66c509e313c9391c99bd3a28a811b1f9ba9a2af7b",
+  "findings": []
+ },
+ {
+  "text": "device MAC is 00:1A:2B:3C:4D:5E on vlan 20",
+  "label": "clean",
+  "expect": "allow",
+  "action": "allow",
+  "redacted": "device MAC is 00:1A:2B:3C:4D:5E on vlan 20",
+  "categories": "",
+  "detectors": "",
+  "sha256": "42b4d50acb789a8a874ba1e7942f54e5c8749e6cfff5b24167d21d30bc30573f",
+  "findings": []
+ },
+ {
+  "text": "vitals: temperature 98.6, heart rate 72, bp 120/80",
+  "label": "clean",
+  "expect": "allow",
+  "action": "allow",
+  "redacted": "vitals: temperature 98.6, heart rate 72, bp 120/80",
+  "categories": "",
+  "detectors": "",
+  "sha256": "79186d34c66fcbca85f18f39a9511cb6b150143d550d41c3e69b045058cfdc9e",
+  "findings": []
+ },
+ {
+  "text": "please rewrite this paragraph to sound more formal and concise",
+  "label": "clean",
+  "expect": "allow",
+  "action": "allow",
+  "redacted": "please rewrite this paragraph to sound more formal and concise",
+  "categories": "",
+  "detectors": "",
+  "sha256": "f92e034cdf8dc76ef7a0cf967287d1262e61239220aa10a58a00f9b4f0f9b2c3",
+  "findings": []
+ }
+]

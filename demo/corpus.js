@@ -1,0 +1,62 @@
+/*
+ * GENERATED from harness/corpus.jsonl — do not edit by hand.
+ * Regenerate with:  node demo/build_corpus.js
+ */
+(function (root, factory) {
+  if (typeof module === "object" && module.exports) module.exports = factory();
+  else root.GatekeepCorpus = factory();
+})(typeof self !== "undefined" ? self : this, function () {
+  "use strict";
+  return [
+  {"text":"deploy the stack with AKIAIOSFODNN7EXAMPLE as the access key","label":"secret","expect":"block"},
+  {"text":"aws_access_key_id = AKIAI44QH8DHBEXAMPLE","label":"secret","expect":"block"},
+  {"text":"hey can you check why AKIAJQR7XWZ3KAEXAMPL is getting throttled","label":"secret","expect":"block"},
+  {"text":"use ghp_A1b2C3d4E5f6G7h8I9j0K1l2M3n4O5p6Q7r8 to clone the private repo","label":"secret","expect":"block"},
+  {"text":"GITHUB_TOKEN=gho_Zz9Yy8Xx7Ww6Vv5Uu4Tt3Ss2Rr1Qq0Pp9Oo8","label":"secret","expect":"block"},
+  {"text":"the bot token is xoxb-2952968454722-3893814986amAeKFimJoeSDmCyXBEbkYnW","label":"secret","expect":"block"},
+  {"text":"slack user token: xoxp-8842571033-1954128374-ZfLqPwRnTgYbVs","label":"secret","expect":"block"},
+  {"text":"-----BEGIN RSA PRIVATE KEY----- MIIEpAIBAAKCAQEA7","label":"secret","expect":"block"},
+  {"text":"paste this into id_ed25519: -----BEGIN OPENSSH PRIVATE KEY-----","label":"secret","expect":"block"},
+  {"text":"the session jwt is eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIn0.dozjgNryP4J3jVmNHl0w5N_XgL0n3I9PlFUP0THsR8U","label":"secret","expect":"block"},
+  {"text":"curl -H 'Authorization: Bearer eyJhbGciOiJSUzI1NiJ9.eyJyb2xlIjoiYWRtaW4ifQ.Sfl_KxwRJSMeKKF2QT4fwpMeJf36POk6yJVadQsw5c0' api.internal","label":"secret","expect":"block"},
+  {"text":"why does eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpYXQiOjE3MTk0NDQwMDB9.h4nDl3rTw9kYzXqPv2mB8cJ6fL0gS5aE1uI7oR3nM9k keep expiring","label":"secret","expect":"block"},
+  {"text":"the signing secret is 9fK2mQ8xW3nR7pL5vB1zT6hY4cJ0sD8gA2eU5iO7 rotate it monthly","label":"secret","expect":"block"},
+  {"text":"DB_ENCRYPTION_KEY=Zx91kPq3Vm7Yw2Rt5Nb8Lc4Js6Hd0Fg1Ka9Se3Ui","label":"secret","expect":"block"},
+  {"text":"here is the api secret qW4eR6tY8uI0oP2aS5dF7gH9jK1lZ3xC6vB8nM0q keep it safe","label":"secret","expect":"block"},
+  {"text":"my social is 219-09-9999 for the background check","label":"pii","expect":"redact"},
+  {"text":"employee ssn 457-55-5462 needs updating in workday","label":"pii","expect":"redact"},
+  {"text":"the form lists 078-05-1120 as the taxpayer id","label":"pii","expect":"redact"},
+  {"text":"verify 612-20-6789 against the payroll record","label":"pii","expect":"redact"},
+  {"text":"charge card 4111111111111111 for the renewal","label":"pii","expect":"redact"},
+  {"text":"customer paid with 5555555555554444 yesterday","label":"pii","expect":"redact"},
+  {"text":"amex on file: 378282246310005 exp 09/27","label":"pii","expect":"redact"},
+  {"text":"refund 4012888888881881 the full amount","label":"pii","expect":"redact"},
+  {"text":"email the contract to jane.doe@example.com today","label":"pii","expect":"redact"},
+  {"text":"cc support+billing@acme.io on the invoice thread","label":"pii","expect":"redact"},
+  {"text":"his personal address is mike.rivera1988@gmail.com not the work one","label":"pii","expect":"redact"},
+  {"text":"call me at (404) 555-0142 after lunch","label":"pii","expect":"redact"},
+  {"text":"the on-call number is 678-555-0199 this week","label":"pii","expect":"redact"},
+  {"text":"text +1 404-555-0117 if the deploy breaks","label":"pii","expect":"redact"},
+  {"text":"candidate: ssn 219-09-9999, contact hr.intake@example.org","label":"pii","expect":"redact"},
+  {"text":"the quick brown fox jumps over the lazy dog","label":"clean","expect":"allow"},
+  {"text":"summarize this meeting agenda and list the action items","label":"clean","expect":"allow"},
+  {"text":"see https://docs.python.org/3/library/re.html for the regex syntax","label":"clean","expect":"allow"},
+  {"text":"tracking issue: https://github.com/microsoft/presidio/issues/1655","label":"clean","expect":"allow"},
+  {"text":"commit 3f2b8c9d4e5a6f7081920a3b4c5d6e7f8091a2b3 broke the build","label":"clean","expect":"allow"},
+  {"text":"request id 550e8400-e29b-41d4-a716-446655440000 timed out","label":"clean","expect":"allow"},
+  {"text":"the header value was dGVzdCBzdHJpbmc= after encoding","label":"clean","expect":"allow"},
+  {"text":"for i in range(10): print(i**2)","label":"clean","expect":"allow"},
+  {"text":"const total = items.reduce((a, b) => a + b.price, 0);","label":"clean","expect":"allow"},
+  {"text":"test card 1234567890123456 should be rejected by the gateway","label":"clean","expect":"allow"},
+  {"text":"customer id 4045550123 has two open tickets","label":"clean","expect":"allow"},
+  {"text":"the placeholder ssn 000-12-3456 is used in all our fixtures","label":"clean","expect":"allow"},
+  {"text":"666-12-3456 is not a real social security number","label":"clean","expect":"allow"},
+  {"text":"release v2.13.4 shipped on 2026-07-07 with the hotfix","label":"clean","expect":"allow"},
+  {"text":"order 4111 shipped, invoice 1111 is still unpaid","label":"clean","expect":"allow"},
+  {"text":"how do I rotate AWS access keys without downtime","label":"clean","expect":"allow"},
+  {"text":"the API returned 403 forbidden on every retry","label":"clean","expect":"allow"},
+  {"text":"device MAC is 00:1A:2B:3C:4D:5E on vlan 20","label":"clean","expect":"allow"},
+  {"text":"vitals: temperature 98.6, heart rate 72, bp 120/80","label":"clean","expect":"allow"},
+  {"text":"please rewrite this paragraph to sound more formal and concise","label":"clean","expect":"allow"}
+  ];
+});

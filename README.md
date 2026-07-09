@@ -27,6 +27,14 @@ a byte. That's what Gatekeep does.
 
 All of it is governed by a single YAML file, not code.
 
+## Live demo
+
+Open [`demo/index.html`](demo/index.html) in a browser — the full detection pipeline,
+ported to JavaScript, running entirely client-side. Type a prompt, watch it get blocked,
+redacted, or allowed, and see the audit trail fill in. No API key, no server. The port is
+parity-tested against the Python engine on the whole red-team corpus
+(see [demo/README.md](demo/README.md)).
+
 ## Quickstart
 
 **With Docker:**
