@@ -442,8 +442,8 @@
 
   <p class="intro">
     Gatekeep is a drop-in reverse proxy for the Anthropic API. It scans every prompt
-    <b>before</b> the model sees it: secrets are <b>blocked</b>, personal data is
-    <b>redacted</b>, everything is <b>audit-logged</b> without ever storing the raw text.
+    before the model sees it: secrets are blocked, personal data is redacted, and
+    everything is audit-logged without ever storing the raw text.
     This page runs the same detection and policy pipeline, ported to JavaScript,
     entirely in your browser. No API key, no server, nothing leaves this page.
   </p>
@@ -523,7 +523,7 @@
     <div class="audit-empty" id="audit-empty">No decisions yet this session.</div>
     <p class="audit-note">
       One row per decision, the same columns as the proxy's SQLite audit table.
-      <b>The raw prompt is never stored</b>: only a SHA-256 of it, the finding categories and
+      The raw prompt is never stored: only a SHA-256 of it, the finding categories and
       detector names, the routing outcome, and the decision latency. That is the never-log rule,
       and it holds even here, in a page that never leaves your machine.
     </p>
