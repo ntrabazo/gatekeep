@@ -30,3 +30,30 @@ jobs:
           node-version: "20"
       - name: Verify the JS port matches the Python engine on the full corpus
         run: node demo/parity.test.js
+
+  docker:
+    name: Docker Compose quickstart (build + live firewall smoke test)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build the image and boot the stack (compose healthcheck gates readiness)
+        run: docker compose up --build --detach --wait
+      - name: Liveness — GET /health returns 200
+        run: curl -fsS http://127.0.0.1:8100/health
+      - name: Firewall — a corpus secret is blocked with HTTP 403
+        # The block decision fires before any upstream call, so this needs no API key.
+        run: |
+          status=$(curl -s -o /tmp/resp.json -w '%{http_code}' \
+            -X POST http://127.0.0.1:8100/v1/messages \
+            -H 'content-type: application/json' \
+            -d '{"model":"claude-sonnet-5","max_tokens":16,"messages":[{"role":"user","content":"my aws key is AKIAIOSFODNN7EXAMPLE"}]}')
+          echo "HTTP $status"; cat /tmp/resp.json; echo
+          test "$status" = "403"
+      - name: Hardening — the container runs as a non-root user
+        run: |
+          uid=$(docker compose exec -T gatekeep id -u)
+          echo "container uid: $uid"
+          test "$uid" != "0"
+      - name: Tear down
+        if: always()
+        run: docker compose down
