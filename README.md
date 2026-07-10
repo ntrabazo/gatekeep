@@ -1,5 +1,7 @@
 # Gatekeep
 
+[![CI](https://github.com/ntrabazo/gatekeep/actions/workflows/ci.yml/badge.svg)](https://github.com/ntrabazo/gatekeep/actions/workflows/ci.yml)
+
 **A prompt firewall for the Anthropic API.** Gatekeep is a drop-in reverse proxy that scans
 every prompt *before* it reaches the model — blocking secrets, redacting personal data, and
 audit-logging every decision — without ever storing the sensitive text it catches.
@@ -29,11 +31,15 @@ All of it is governed by a single YAML file, not code.
 
 ## Live demo
 
-Open [`demo/index.html`](demo/index.html) in a browser — the full detection pipeline,
-ported to JavaScript, running entirely client-side. Type a prompt, watch it get blocked,
-redacted, or allowed, and see the audit trail fill in. No API key, no server. The port is
-parity-tested against the Python engine on the whole red-team corpus
-(see [demo/README.md](demo/README.md)).
+**[▶ Try it in your browser — nicolastrabazo.com/gatekeep](https://nicolastrabazo.com/gatekeep/)**
+
+The full detection pipeline, ported to JavaScript and running entirely client-side. Type a
+prompt, watch it get blocked, redacted, or allowed, and see the audit trail fill in. No API
+key, no server. The port is parity-tested against the Python engine on the whole red-team
+corpus (see [demo/README.md](demo/README.md)).
+
+Prefer to run it locally? Open [`demo/index.html`](demo/index.html) in any browser — same
+page, no build step.
 
 ## Quickstart
 

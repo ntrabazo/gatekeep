@@ -66,7 +66,7 @@ async def messages(request: Request) -> Response:
         upstream = await forwarder.forward(raw, headers)
         return _relay(upstream)
 
-    # Scan BEFORE the stream check (PLAN.md §5): a secret in a streaming request
+    # Scan BEFORE the stream check: a secret in a streaming request
     # still blocks with 403 rather than leaking into a plain "no streaming" 400.
     refs = extract_texts(body)
     texts = [r.text for r in refs]

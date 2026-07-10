@@ -16,7 +16,7 @@ def make_preview(match: str) -> str:
 
 
 def run_all(text: str, cfg=None) -> list[Finding]:
-    """Run every enabled detector over one text. cfg is the Policies object (chunk 3);
+    """Run every enabled detector over one text. cfg is the Policies object;
     None falls back to built-in entropy defaults."""
     from . import pii, secrets
 
