@@ -1,0 +1,38 @@
+# Packaging for the Gatekeep proxy itself. The harness/demo client has extra
+# needs (the anthropic SDK) — those stay in requirements.txt, which remains the
+# repo-checkout install path shown in the README quickstart.
+[build-system]
+requires = ["setuptools>=77"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "gatekeep"
+version = "1.0.0"
+description = "Prompt firewall / LLM governance reverse proxy for the Anthropic Messages API — blocks secrets, redacts PII, audit-logs every decision."
+readme = "README.md"
+license = "MIT"
+license-files = ["LICENSE"]
+authors = [{ name = "Nicolas Trabazo" }]
+requires-python = ">=3.10"
+dependencies = [
+    "fastapi>=0.139.0",
+    "httpx>=0.28.1",
+    "pydantic>=2.13.4",
+    "PyYAML>=6.0.3",
+    "uvicorn>=0.50.2",
+]
+
+[project.optional-dependencies]
+# NER layer for names/locations. Requires Python 3.12 (spaCy pins exclude 3.13+);
+# see requirements-optional.txt for the one-time spaCy model download.
+presidio = [
+    "presidio-analyzer==2.2.363",
+    "presidio-anonymizer==2.2.363",
+]
+
+[project.urls]
+Homepage = "https://nicolastrabazo.com/gatekeep/"
+Repository = "https://github.com/ntrabazo/gatekeep"
+
+[tool.setuptools.packages.find]
+where = ["src"]
