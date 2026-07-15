@@ -12,6 +12,9 @@ audit.db-wal
 audit.db-shm
 .env
 
+# Cached eval datasets — fetched by harness/fetch_datasets.py, not redistributed
+harness/data/
+
 # Local tooling / editor state
 .claude/
 .wrangler/

@@ -38,23 +38,37 @@ PATTERNS: dict[str, list[tuple[re.Pattern, float]]] = {
         (re.compile(r"\bnew\s+(?:instructions?|rules?|directives?)\s*:", _I), 0.8),
         (re.compile(
             r"\b(?:do\s+not|don'?t|stop|refuse\s+to)\s+(?:follow(?:ing)?|obey(?:ing)?|listen\s+to|comply\s+with)\b"
-            r"[^.?!\n]{0,40}\b(?:instructions?|rules?|guidelines?|system|above|previous)\b", _I), 0.8),
+            r"[^.?!\n]{0,40}\b(?:instructions?|rules?|guidelines?|directives?|commands?|orders?|programming"
+            r"|system|above|previous|original)\b", _I), 0.8),
         # German coverage: deepset/prompt-injections carries German attack rows.
         (re.compile(
             r"\b(?:ignorier\w*|vergiss|vergesse?n?)\b[^.?!\n]{0,50}"
             r"\b(?:alles|anweisung\w*|instruktion\w*|vorherig\w*|obig\w*|regeln)\b", _I), 0.85),
     ],
     "role_manipulation": [
-        (re.compile(r"\byou\s+are\s+(?:now|no\s+longer)\b", _I), 0.8),
-        (re.compile(r"\bfrom\s+now\s+on\b[^.?!\n]{0,60}\b(?:you|act|respond|answer|behave|reply)\b", _I), 0.8),
+        # Persona/capability reassignment — structure-keyed so "you are now logged in" is spared.
+        (re.compile(
+            r"\byou\s+are\s+now\s+(?:a\s+|an\s+|the\s+)?(?:[a-z]+\s+){0,3}?"
+            r"(?:ai|assistant|bot|model|chatbot|dan|hacker|persona|character|entity"
+            r"|unrestricted|unfiltered|uncensored|jailbroken)\b", _I), 0.8),
+        (re.compile(
+            r"\byou\s+are\s+no\s+longer\s+(?:bound|restricted|limited|required|obligated|constrained"
+            r"|subject\s+to|claude|an?\s+ai)\b", _I), 0.8),
+        (re.compile(r"\bfrom\s+now\s+on\b[^.?!\n]{0,60}\b(?:you\s+(?:are|will|must|can|should)|you'?re)\b", _I), 0.8),
         (re.compile(
             r"\b(?:act|pretend|behave|roleplay)\b[^.?!\n]{0,30}\b(?:as\s+if|as\s+though|like|as)\b[^.?!\n]{0,50}"
             r"\b(?:no\s+(?:rules|restrictions?|limitations?|filters?|guidelines?)|unrestricted|unfiltered|uncensored"
             r"|jailbro\w+|DAN|evil|without\s+(?:any\s+)?(?:rules|restrictions?|limitations?|filters?|ethic\w*))", _I), 0.85),
-        (re.compile(r"\b(?:DAN\s+mode|developer\s+mode|god\s+mode|jailbreak|jailbroken)\b", _I), 0.8),
+        (re.compile(r"\b(?:DAN\s+mode|jailbreak|jailbroken)\b", _I), 0.8),
+        # "developer/god mode" only when being activated or declared on — spares "Chrome's developer mode".
         (re.compile(
-            r"\b(?:no|without|free\s+(?:of|from))\s+(?:ethical|moral|safety|content)\s+"
-            r"(?:guidelines?|restrictions?|filters?|constraints?|policies)\b", _I), 0.8),
+            r"\b(?:enter|enable|activ\w+|turn\s+on|switch\s+(?:to|into)|go\s+into|unlock)\b"
+            r"[^.?!\n]{0,20}\b(?:developer|god|dan)\s+mode\b", _I), 0.8),
+        (re.compile(r"\b(?:developer|god|dan)\s+mode\s+(?:enabled|activated|unlocked|is\s+(?:now\s+)?on)\b", _I), 0.8),
+        # "no ethical guidelines", "no moral or ethical guidelines", "without safety and content filters"
+        (re.compile(
+            r"\b(?:no|without|free\s+(?:of|from))\s+(?:(?:ethical|moral|safety|content)\b[\s,]+(?:or\s+|and\s+)?){1,3}"
+            r"(?:guidelines?|restrictions?|filters?|constraints?|policies|rules?)\b", _I), 0.8),
     ],
     "system_prompt_leak": [
         (re.compile(
