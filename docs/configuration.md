@@ -20,10 +20,20 @@ entropy:
 presidio:
   enabled: false
 
+# Prompt-injection detector. Shadow mode (log-and-allow) is the default and never blocks.
+# Full reference: docs/injection.md
+injection:
+  enabled: true
+  mode: shadow          # shadow = log-and-allow (default) | enforce = block at threshold
+  block_threshold: 0.8  # enforce mode blocks when the document score is >= this
+  judge_enabled: false  # Tier-2 LLM-judge seam — inert in v1
+  judge_band: [0.3, 0.7]
+
 # Category -> action. First matching rule wins.
 rules:
   - {category: secret, action: block}
   - {category: pii,    action: redact}
+  - {category: injection, action: block}   # consulted only in enforce mode, at/above block_threshold
 
 # Action when no rule matches: block | redact | allow
 default_action: allow
@@ -43,6 +53,10 @@ routing:
 | `entropy.min_length` | Tokens shorter than this are never entropy-flagged. Raise to reduce noise. |
 | `entropy.threshold` | Bits-of-entropy-per-character cutoff. Lower = more aggressive (more catches, more false positives). `4.0` is a tuned default. |
 | `presidio.enabled` | Turn the NER layer on. Requires `requirements-optional.txt` + the spaCy model. |
+| `injection.enabled` | Master switch for the prompt-injection detector. |
+| `injection.mode` | `shadow` scores + logs but always allows (default); `enforce` blocks (403) at/above `block_threshold`. |
+| `injection.block_threshold` | Document score at/above which `enforce` mode blocks. `0.8` default. |
+| `injection.judge_enabled` / `injection.judge_band` | Inert Tier-2 (LLM judge) seam — see [injection.md](injection.md). |
 | `rules` | Ordered list mapping a finding `category` to an `action`. First match wins. |
 | `default_action` | Applied to findings no rule matches. |
 | `routing` | Optional model swaps keyed on the decision action. No match = requested model is left unchanged. |
@@ -50,7 +64,9 @@ routing:
 ## Categories and actions
 
 - **Categories** produced by the detectors: `secret` (credentials, keys, tokens, high-entropy
-  blobs) and `pii` (SSN, credit card, email, phone, and — with Presidio on — names/locations).
+  blobs), `pii` (SSN, credit card, email, phone, and — with Presidio on — names/locations), and
+  `injection` (prompt-injection techniques; scored 0–1 and handled mode-aware, see
+  [injection.md](injection.md)).
 - **Actions:** `block` (reject with 403, never reaches the model), `redact` (replace the
   sensitive span with `[REDACTED:CATEGORY]` and forward), `allow` (forward unchanged).
 
