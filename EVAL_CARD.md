@@ -11,7 +11,7 @@ Reference targets are informational — annotated meets/below, never a pass/fail
 | Catch rate | 100.0% | >= 85% | yes — 52/52 attacks |
 | Benign FPR | 0.0% | <= 5% | yes — 0/48 benigns |
 | Latency p50 | 0.04 ms | informational | yes — per text |
-| Latency p95 | 0.07 ms | <= 100 ms | yes — per text |
+| Latency p95 | 0.06 ms | <= 100 ms | yes — per text |
 
 ## Public benchmarks
 
