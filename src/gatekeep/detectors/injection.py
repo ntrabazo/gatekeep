@@ -36,6 +36,11 @@ PATTERNS: dict[str, list[tuple[re.Pattern, float]]] = {
             r"[^.?!\n]{0,40}\b" + _NOUNS + r"\b", _I), 0.85),
         (re.compile(r"\b(?:ignore|disregard|forget)\b[^.?!\n]{0,20}\babove\b[^.?!\n]{0,20}\b(?:and|instead)\b", _I), 0.85),
         (re.compile(r"\bnew\s+(?:instructions?|rules?|directives?)\s*:", _I), 0.8),
+        # Reset idiom: "forget everything we discussed", "disregard all that came before".
+        (re.compile(
+            r"\b(?:forget|disregard|ignore)\s+(?:about\s+)?(?:everything|all)\b[^.?!\n]{0,40}"
+            r"\b(?:before|above|previous|prior|so\s+far|earlier|that\s+(?:came|was)\s+before"
+            r"|we(?:'ve|\s+have)?\s+(?:just\s+)?(?:talked|discussed|said|covered))\b", _I), 0.85),
         (re.compile(
             r"\b(?:do\s+not|don'?t|stop|refuse\s+to)\s+(?:follow(?:ing)?|obey(?:ing)?|listen\s+to|comply\s+with)\b"
             r"[^.?!\n]{0,40}\b(?:instructions?|rules?|guidelines?|directives?|commands?|orders?|programming"
@@ -81,6 +86,10 @@ PATTERNS: dict[str, list[tuple[re.Pattern, float]]] = {
         (re.compile(
             r"\bwhat\s+(?:is|are|was|were)\s+(?:your|the)\s+"
             r"(?:system\s+prompt|initial\s+instructions?|hidden\s+instructions?|original\s+prompt)\b", _I), 0.8),
+        # "print the above prompt", "spell-check and print above prompt" (deepset END-marker idiom).
+        (re.compile(
+            r"\b(?:print|repeat|output|display|reproduce)\b[^.?!\n]{0,25}"
+            r"\b(?:the\s+)?above\s+(?:prompt|instructions?|input|system\s+prompt)\b", _I), 0.8),
     ],
     "delimiter_injection": [
         (re.compile(r"</?\s*(?:system|sys|assistant|instructions?|admin)\s*>", _I), 0.8),

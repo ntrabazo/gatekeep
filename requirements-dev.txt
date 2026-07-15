@@ -1,0 +1,5 @@
+# Eval-only dependencies — NOT needed at runtime. The Gatekeep proxy + Tier-1 detector
+# stay pure-stdlib; these only power harness/fetch_datasets.py + the public-benchmark eval.
+# Install into the 3.12 venv:  .venv\Scripts\pip install -r requirements-dev.txt
+datasets==5.0.0          # datasets.load_dataset(...) resolves deepset + NotInject directly
+huggingface_hub==1.23.0  # list_repo_files fallback when load_dataset can't resolve a repo
