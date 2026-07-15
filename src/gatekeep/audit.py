@@ -25,7 +25,9 @@ CREATE TABLE IF NOT EXISTS audit_events (
     model_requested TEXT,
     model_routed    TEXT,            -- NULL when no upstream call (block / reject_stream)
     status_upstream INTEGER,         -- NULL when no upstream call
-    latency_ms      REAL
+    latency_ms      REAL,
+    injection_score REAL,            -- max injection finding score for the request (0.0 = none)
+    injection_categories TEXT        -- csv of techniques, e.g. "instruction_override,obfuscation"
 )
 """
 
@@ -41,6 +43,8 @@ class AuditEvent:
     model_routed: Optional[str]
     status_upstream: Optional[int]
     latency_ms: float
+    injection_score: float = 0.0
+    injection_categories: str = ""
 
 
 def init_db(path: str = DB_PATH) -> None:
@@ -48,6 +52,12 @@ def init_db(path: str = DB_PATH) -> None:
     _conn = sqlite3.connect(path, check_same_thread=False)
     _conn.execute("PRAGMA journal_mode=WAL")
     _conn.execute(_SCHEMA)
+    # Idempotent migration: DBs created before the injection columns existed get them
+    # added in place — never deleted, the existing trail is preserved.
+    existing = {row[1] for row in _conn.execute("PRAGMA table_info(audit_events)")}
+    for column, decl in (("injection_score", "REAL"), ("injection_categories", "TEXT")):
+        if column not in existing:
+            _conn.execute(f"ALTER TABLE audit_events ADD COLUMN {column} {decl}")
     _conn.commit()
 
 
