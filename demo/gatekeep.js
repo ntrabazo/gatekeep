@@ -1,9 +1,10 @@
-/*
+﻿/*
  * Gatekeep detection engine — JavaScript port for the static demo page.
  *
  * Ported 1:1 from the Python engine (src/gatekeep/detectors/secrets.py,
- * detectors/pii.py, policy.py, router.py). The policies.yaml values are
- * inlined in POLICIES below; policies.yaml stays the source of truth.
+ * detectors/pii.py, detectors/normalize.py, detectors/injection.py,
+ * policy.py, router.py). The policies.yaml values are inlined in POLICIES
+ * below; policies.yaml stays the source of truth.
  *
  * Parity is enforced by demo/parity.test.js, which replays the full harness
  * corpus through this port and compares every action, redaction, finding
@@ -24,9 +25,17 @@
     version: 1,
     onParseFailure: "block",
     entropy: { minLength: 20, threshold: 4.0 },
+    injection: {
+      enabled: true,
+      mode: "shadow", // shadow = log-and-allow (default) | enforce = block at threshold
+      blockThreshold: 0.8,
+      judgeEnabled: false, // Tier-2 seam — inert in v1 (PLAN-injection.md §16)
+      judgeBand: [0.3, 0.7],
+    },
     rules: [
       { category: "secret", action: "block" },
       { category: "pii", action: "redact" },
+      { category: "injection", action: "block" }, // consulted only in enforce mode at/above blockThreshold
     ],
     defaultAction: "allow",
     routing: [{ when: "redact", model: "claude-haiku-4-5-20251001" }],
@@ -73,6 +82,7 @@
           detector: name,
           span: [m.index, m.index + m[0].length],
           preview: makePreview(m[0]),
+          score: 1.0,
         });
       }
     }
@@ -93,6 +103,7 @@
           detector: "entropy",
           span: [start, end],
           preview: makePreview(token),
+          score: 1.0,
         });
       }
     }
@@ -134,6 +145,7 @@
           detector: "ssn",
           span: [m.index, m.index + m[0].length],
           preview: makePreview(m[0]),
+          score: 1.0,
         });
       }
     }
@@ -144,6 +156,7 @@
           detector: "credit_card",
           span: [m.index, m.index + m[0].length],
           preview: makePreview(m[0]),
+          score: 1.0,
         });
       }
     }
@@ -153,6 +166,7 @@
         detector: "email",
         span: [m.index, m.index + m[0].length],
         preview: makePreview(m[0]),
+        score: 1.0,
       });
     }
     for (const m of text.matchAll(PHONE_RE)) {
@@ -161,17 +175,195 @@
         detector: "phone",
         span: [m.index, m.index + m[0].length],
         preview: makePreview(m[0]),
+        score: 1.0,
       });
     }
     return findings;
+  }
+
+  // ---- detectors/normalize.py ---------------------------------------------
+  // Zero-width and direction-control characters attackers lace into trigger words.
+  const ZERO_WIDTH = new Set([
+    "​", "‌", "‍", "‎", "‏", // ZWSP / ZWNJ / ZWJ / LRM / RLM
+    "‪", "‫", "‬", "‭", "‮", // directional embedding/override
+    "⁠", "﻿",                               // word joiner, BOM / ZWNBSP
+  ]);
+
+  // Small documented map of common Cyrillic/Greek Latin-lookalikes. Not exhaustive.
+  const HOMOGLYPHS = {
+    // Cyrillic lowercase
+    "а": "a", "е": "e", "о": "o", "р": "p", "с": "c",
+    "у": "y", "х": "x", "і": "i", "ѕ": "s", "ј": "j",
+    // Cyrillic uppercase
+    "А": "A", "В": "B", "Е": "E", "К": "K", "М": "M",
+    "Н": "H", "О": "O", "Р": "P", "С": "C", "Т": "T",
+    "Х": "X", "І": "I", "Ѕ": "S", "Ј": "J",
+    // Greek lowercase
+    "α": "a", "ε": "e", "ι": "i", "κ": "k", "ν": "v",
+    "ο": "o", "ρ": "p", "τ": "t", "υ": "u", "χ": "x",
+    // Greek uppercase
+    "Α": "A", "Β": "B", "Ε": "E", "Ζ": "Z", "Η": "H",
+    "Ι": "I", "Κ": "K", "Μ": "M", "Ν": "N", "Ο": "O",
+    "Ρ": "P", "Τ": "T", "Υ": "Y", "Χ": "X",
+  };
+
+  function normalize(text) {
+    // Returns { text, obfuscationPresent } — NFKC, strip zero-width, fold homoglyphs,
+    // collapse whitespace. Plain NFD→NFC composition does NOT trip the flag.
+    const nfkc = text.normalize("NFKC");
+    const compatChanged = nfkc !== text.normalize("NFC");
+
+    let withoutZw = "";
+    for (const c of nfkc) if (!ZERO_WIDTH.has(c)) withoutZw += c;
+    const zwFound = withoutZw.length !== nfkc.length;
+
+    let folded = "";
+    for (const c of withoutZw) folded += HOMOGLYPHS[c] || c;
+    const foldFound = folded !== withoutZw;
+
+    const collapsed = folded.replace(/\s+/g, " ").trim();
+    return { text: collapsed, obfuscationPresent: !!(compatChanged || zwFound || foldFound) };
+  }
+
+  // ---- detectors/injection.py ---------------------------------------------
+  // Structure-keyed patterns (verb + object shape, never bare trigger words),
+  // ported 1:1. Spans reference NORMALIZED-text offsets, exactly like Python.
+  const _NOUNS = "(?:instructions?|prompts?|rules?|directives?|guidelines?|constraints?|commands?|context|programming|training)";
+  const _LEAK_VERBS = "(?:print|show|reveal|repeat|output|display|disclose|leak|expose|share|tell\\s+me|give\\s+me|recite|dump|paste)";
+  const _EXFIL_VERBS = "(?:send|forward|post|upload|email|exfiltrate|transmit|leak|submit)";
+  const _EXFIL_PAYLOAD =
+    "(?:conversation|chat\\s+history|message\\s+history|(?:this|the|our)\\s+(?:chat|conversation|thread|context)" +
+    "|secrets?|credentials?|api\\s+keys?|passwords?|tokens?|everything\\s+above|the\\s+above)";
+
+  // technique -> [[regex, weight]]
+  const INJECTION_PATTERNS = {
+    instruction_override: [
+      [new RegExp(
+        "\\b(?:ignore|disregard|forget|override|bypass|discard|drop)\\b[^.?!\\n]{0,40}" +
+        "\\b(?:previous|prior|above|earlier|preceding|initial|original|all|any|your|these|those|system|the)\\b" +
+        "[^.?!\\n]{0,40}\\b" + _NOUNS + "\\b", "gi"), 0.85],
+      [new RegExp("\\b(?:ignore|disregard|forget)\\b[^.?!\\n]{0,20}\\babove\\b[^.?!\\n]{0,20}\\b(?:and|instead)\\b", "gi"), 0.85],
+      [new RegExp("\\bnew\\s+(?:instructions?|rules?|directives?)\\s*:", "gi"), 0.8],
+      // Reset idiom: "forget everything we discussed", "disregard all that came before".
+      [new RegExp(
+        "\\b(?:forget|disregard|ignore)\\s+(?:about\\s+)?(?:everything|all)\\b[^.?!\\n]{0,40}" +
+        "\\b(?:before|above|previous|prior|so\\s+far|earlier|that\\s+(?:came|was)\\s+before" +
+        "|we(?:'ve|\\s+have)?\\s+(?:just\\s+)?(?:talked|discussed|said|covered))\\b", "gi"), 0.85],
+      [new RegExp(
+        "\\b(?:do\\s+not|don'?t|stop|refuse\\s+to)\\s+(?:follow(?:ing)?|obey(?:ing)?|listen\\s+to|comply\\s+with)\\b" +
+        "[^.?!\\n]{0,40}\\b(?:instructions?|rules?|guidelines?|directives?|commands?|orders?|programming" +
+        "|system|above|previous|original)\\b", "gi"), 0.8],
+      // German coverage: deepset/prompt-injections carries German attack rows.
+      [new RegExp(
+        "\\b(?:ignorier\\w*|vergiss|vergesse?n?)\\b[^.?!\\n]{0,50}" +
+        "\\b(?:alles|anweisung\\w*|instruktion\\w*|vorherig\\w*|obig\\w*|regeln)\\b", "gi"), 0.85],
+    ],
+    role_manipulation: [
+      // Persona/capability reassignment — structure-keyed so "you are now logged in" is spared.
+      [new RegExp(
+        "\\byou\\s+are\\s+now\\s+(?:a\\s+|an\\s+|the\\s+)?(?:[a-z]+\\s+){0,3}?" +
+        "(?:ai|assistant|bot|model|chatbot|dan|hacker|persona|character|entity" +
+        "|unrestricted|unfiltered|uncensored|jailbroken)\\b", "gi"), 0.8],
+      [new RegExp(
+        "\\byou\\s+are\\s+no\\s+longer\\s+(?:bound|restricted|limited|required|obligated|constrained" +
+        "|subject\\s+to|claude|an?\\s+ai)\\b", "gi"), 0.8],
+      [new RegExp("\\bfrom\\s+now\\s+on\\b[^.?!\\n]{0,60}\\b(?:you\\s+(?:are|will|must|can|should)|you'?re)\\b", "gi"), 0.8],
+      [new RegExp(
+        "\\b(?:act|pretend|behave|roleplay)\\b[^.?!\\n]{0,30}\\b(?:as\\s+if|as\\s+though|like|as)\\b[^.?!\\n]{0,50}" +
+        "\\b(?:no\\s+(?:rules|restrictions?|limitations?|filters?|guidelines?)|unrestricted|unfiltered|uncensored" +
+        "|jailbro\\w+|DAN|evil|without\\s+(?:any\\s+)?(?:rules|restrictions?|limitations?|filters?|ethic\\w*))", "gi"), 0.85],
+      [new RegExp("\\b(?:DAN\\s+mode|jailbreak|jailbroken)\\b", "gi"), 0.8],
+      // "developer/god mode" only when being activated or declared on — spares "Chrome's developer mode".
+      [new RegExp(
+        "\\b(?:enter|enable|activ\\w+|turn\\s+on|switch\\s+(?:to|into)|go\\s+into|unlock)\\b" +
+        "[^.?!\\n]{0,20}\\b(?:developer|god|dan)\\s+mode\\b", "gi"), 0.8],
+      [new RegExp("\\b(?:developer|god|dan)\\s+mode\\s+(?:enabled|activated|unlocked|is\\s+(?:now\\s+)?on)\\b", "gi"), 0.8],
+      // "no ethical guidelines", "without safety and content filters"
+      [new RegExp(
+        "\\b(?:no|without|free\\s+(?:of|from))\\s+(?:(?:ethical|moral|safety|content)\\b[\\s,]+(?:or\\s+|and\\s+)?){1,3}" +
+        "(?:guidelines?|restrictions?|filters?|constraints?|policies|rules?)\\b", "gi"), 0.8],
+    ],
+    system_prompt_leak: [
+      [new RegExp(
+        "\\b" + _LEAK_VERBS + "\\b[^.?!\\n]{0,40}" +
+        "\\b(?:system\\s+prompt|system\\s+message|initial\\s+(?:prompt|instructions?)" +
+        "|hidden\\s+(?:prompt|instructions?)|pre.?prompt|original\\s+instructions?)\\b", "gi"), 0.85],
+      [new RegExp(
+        "\\b" + _LEAK_VERBS + "\\b[^.?!\\n]{0,30}" +
+        "\\byour\\s+(?:instructions?|prompt|rules|guidelines|directives|configuration|programming)\\b", "gi"), 0.8],
+      [new RegExp(
+        "\\bwhat\\s+(?:is|are|was|were)\\s+(?:your|the)\\s+" +
+        "(?:system\\s+prompt|initial\\s+instructions?|hidden\\s+instructions?|original\\s+prompt)\\b", "gi"), 0.8],
+      // "print the above prompt" (deepset END-marker idiom).
+      [new RegExp(
+        "\\b(?:print|repeat|output|display|reproduce)\\b[^.?!\\n]{0,25}" +
+        "\\b(?:the\\s+)?above\\s+(?:prompt|instructions?|input|system\\s+prompt)\\b", "gi"), 0.8],
+    ],
+    delimiter_injection: [
+      [new RegExp("</?\\s*(?:system|sys|assistant|instructions?|admin)\\s*>", "gi"), 0.8],
+      [new RegExp("\\[\\s*/?\\s*(?:SYSTEM|INST|ADMIN)\\s*\\]", "gi"), 0.8],
+      [new RegExp("<\\|\\s*(?:im_start|im_end|system|user|assistant|endoftext)\\s*\\|?>", "gi"), 0.8],
+      [new RegExp("<<\\s*/?\\s*SYS\\s*>>", "gi"), 0.8],
+      [new RegExp("(?:^|\\s)(?:#{2,}|={3,}|-{3,})\\s*(?:system|admin|new\\s+instructions?)\\b", "gi"), 0.75],
+      [new RegExp("\\bBEGIN\\s+(?:SYSTEM|ADMIN|NEW)\\s+(?:PROMPT|INSTRUCTIONS?|MESSAGE)\\b", "gi"), 0.8],
+    ],
+    exfiltration: [
+      [new RegExp(
+        "\\b" + _EXFIL_VERBS + "\\b[^.?!\\n]{0,60}\\b" + _EXFIL_PAYLOAD + "\\b[^.?!\\n]{0,80}\\b(?:to|at)\\b", "gi"), 0.8],
+      [new RegExp(
+        "\\b" + _EXFIL_VERBS + "\\b[^.?!\\n]{0,80}\\bto\\s+(?:https?://\\S+|[\\w.+-]+@[\\w-]+(?:\\.[\\w-]+)+)", "gi"), 0.75],
+      // Markdown image with a query string: the classic zero-click exfil channel.
+      [new RegExp("!\\[[^\\]]{0,80}\\]\\(\\s*https?://[^)\\s]{1,200}[?&=][^)\\s]*\\)", "gi"), 0.8],
+    ],
+  };
+
+  const OBFUSCATION_WEIGHT = 0.4;
+
+  function scanInjection(text) {
+    const norm = normalize(text);
+    const findings = [];
+    for (const technique of Object.keys(INJECTION_PATTERNS)) {
+      for (const [rx, weight] of INJECTION_PATTERNS[technique]) {
+        for (const m of norm.text.matchAll(rx)) {
+          findings.push({
+            category: "injection",
+            detector: technique,
+            span: [m.index, m.index + m[0].length],
+            preview: makePreview(m[0]),
+            score: weight,
+          });
+        }
+      }
+    }
+    if (norm.obfuscationPresent) {
+      findings.push({
+        category: "injection",
+        detector: "obfuscation",
+        span: [0, norm.text.length],
+        preview: "…",
+        score: OBFUSCATION_WEIGHT,
+      });
+    }
+    return findings;
+  }
+
+  // Aggregate injection findings to one document score: 1 - Π(1 - w_i), capped at 1.0.
+  function documentScore(findings) {
+    let p = 1.0;
+    for (const f of findings) {
+      if (f.category === "injection") p *= 1.0 - Math.min(f.score, 1.0);
+    }
+    return Math.min(1.0, 1.0 - p);
   }
 
   // ---- detectors/__init__.py run_all (Presidio layer not ported: optional,
   // off by default, and needs a Python NLP runtime) ------------------------
   function runAll(text, policies) {
     const cfg = policies || POLICIES;
-    const findings = scanSecrets(text, cfg.entropy.minLength, cfg.entropy.threshold);
-    return findings.concat(scanPII(text));
+    let findings = scanSecrets(text, cfg.entropy.minLength, cfg.entropy.threshold);
+    findings = findings.concat(scanPII(text));
+    if (cfg.injection && cfg.injection.enabled) findings = findings.concat(scanInjection(text));
+    return findings;
   }
 
   // ---- policy.py -----------------------------------------------------------
@@ -199,18 +391,48 @@
   function decide(texts, findingsPerText, policies) {
     let action = "allow";
     const matched = [];
-    for (const findings of findingsPerText) {
+
+    // Injection findings are handled out of band: scored + mode-aware, and kept away
+    // from redaction (their spans are normalized-text offsets — see scanInjection).
+    const basePerText = findingsPerText.map((fs) => fs.filter((f) => f.category !== "injection"));
+    const injectionFindings = [];
+    for (const fs of findingsPerText) {
+      for (const f of fs) if (f.category === "injection") injectionFindings.push(f);
+    }
+
+    for (const findings of basePerText) {
       for (const f of findings) {
         const fa = actionFor(f, policies);
         matched.push(f.category + ":" + fa);
         if (SEVERITY[fa] > SEVERITY[action]) action = fa;
       }
     }
+
+    let injectionScore = 0.0;
+    for (const f of injectionFindings) injectionScore = Math.max(injectionScore, f.score);
+    const injectionCategories = [...new Set(injectionFindings.map((f) => f.detector))].sort();
+    if (injectionFindings.length) {
+      const cfg = policies.injection;
+      if (cfg.mode === "enforce" && injectionScore >= cfg.blockThreshold) {
+        const fa = actionFor(injectionFindings[0], policies); // the policies.yaml injection rule
+        matched.push("injection:" + fa);
+        if (SEVERITY[fa] > SEVERITY[action]) action = fa;
+      } else {
+        matched.push("injection:shadow"); // shadow / below threshold: log-and-allow
+      }
+    }
+
     let redacted = texts.slice();
     if (action === "redact") {
-      redacted = texts.map((t, i) => redactText(t, findingsPerText[i], policies));
+      redacted = texts.map((t, i) => redactText(t, basePerText[i], policies));
     }
-    return { action: action, redactedTexts: redacted, matchedRules: matched };
+    return {
+      action: action,
+      redactedTexts: redacted,
+      matchedRules: matched,
+      injectionScore: injectionScore,
+      injectionCategories: injectionCategories,
+    };
   }
 
   // UI helper: the redacted text as segments so redactions can be highlighted.
@@ -315,6 +537,9 @@
     luhnCheck: luhnCheck,
     ssnValid: ssnValid,
     scanPII: scanPII,
+    normalize: normalize,
+    scanInjection: scanInjection,
+    documentScore: documentScore,
     runAll: runAll,
     actionFor: actionFor,
     decide: decide,
