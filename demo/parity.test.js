@@ -1,18 +1,23 @@
 /*
  * Cross-language parity test: the JS port must reproduce the Python engine
- * exactly on the full harness corpus.
+ * exactly on the full harness corpus AND the injection corpus.
  *
  *   node demo/parity.test.js          (exit 0 = parity holds)
  *
- * Checks, per corpus entry:
+ * Checks, per harness-corpus entry:
  *   1. decided action  == Python action == harness expectation
  *   2. redacted text   == Python redacted text
  *   3. findings        == Python findings (category, detector, span, preview)
  *   4. categories/detectors CSVs == Python audit CSVs
  *   5. JS sha256       == Python hashlib sha256 == node:crypto sha256
- * Plus: demo/corpus.js is in sync with harness/corpus.jsonl.
+ * Checks, per injection-corpus entry:
+ *   6. findings (incl. per-finding score) == Python findings
+ *   7. document score == Python document_score
+ *   8. decide() action + matched rules in shadow AND enforce mode == Python
+ *   9. flagged at block_threshold == corpus expect_flag
+ * Plus: demo/corpus.js + demo/injection_corpus.js are in sync with harness/*.jsonl.
  *
- * expected.json comes from the real Python engine: demo/dump_expected.py.
+ * expected*.json come from the real Python engine: demo/dump_expected.py.
  */
 const crypto = require("crypto");
 const fs = require("fs");
@@ -80,10 +85,70 @@ const dirtyTotal = stats.secret.total + stats.pii.total;
 const dirtyHit = stats.secret.hit + stats.pii.hit;
 console.log(`\nCATCH RATE ${dirtyHit}/${dirtyTotal} (${((dirtyHit / dirtyTotal) * 100).toFixed(1)}%)`);
 
+/* ---------- injection corpus ---------- */
+const INJECTION_CORPUS_JS = require("./injection_corpus.js");
+const injectionCorpus = fs
+  .readFileSync(path.join(root, "harness", "injection_corpus.jsonl"), "utf-8")
+  .split(/\r?\n/)
+  .filter((l) => l.trim())
+  .map((l) => JSON.parse(l));
+const expectedInjection = JSON.parse(
+  fs.readFileSync(path.join(__dirname, "expected_injection.json"), "utf-8")
+);
+
+if (JSON.stringify(INJECTION_CORPUS_JS) !== JSON.stringify(injectionCorpus)) {
+  failures.push("  demo/injection_corpus.js is out of sync with harness/injection_corpus.jsonl — run node demo/build_corpus.js");
+}
+if (expectedInjection.length !== injectionCorpus.length) {
+  failures.push(`  expected_injection.json has ${expectedInjection.length} entries, corpus has ${injectionCorpus.length} — rerun demo/dump_expected.py`);
+}
+
+const enforcePolicies = JSON.parse(JSON.stringify(Gatekeep.POLICIES));
+enforcePolicies.injection.mode = "enforce";
+const threshold = Gatekeep.POLICIES.injection.blockThreshold;
+
+const injStats = { attacks: { total: 0, hit: 0 }, benign: { total: 0, hit: 0 } };
+
+injectionCorpus.forEach((e, idx) => {
+  const i = "inj#" + String(idx + 1).padStart(3, "0");
+  const exp = expectedInjection[idx];
+  const findings = Gatekeep.runAll(e.text, Gatekeep.POLICIES);
+  const injOnly = findings.filter((f) => f.category === "injection");
+  const docScore = Gatekeep.documentScore(injOnly);
+  const shadowD = Gatekeep.decide([e.text], [findings], Gatekeep.POLICIES);
+  const enforceD = Gatekeep.decide([e.text], [findings], enforcePolicies);
+
+  const flagged = docScore >= threshold;
+  const bucket = e.label === "injection" ? injStats.attacks : injStats.benign;
+  bucket.total += 1;
+  if (flagged === e.expect_flag) bucket.hit += 1;
+  check(i, "flagged vs expect_flag", flagged, e.expect_flag);
+
+  if (!exp) return;
+  check(i, "findings", findings, exp.findings);
+  if (Math.abs(docScore - exp.document_score) > 1e-6) {
+    failures.push(`  ${i} document score: got ${docScore}, want ${exp.document_score}`);
+  }
+  if (Math.abs(shadowD.injectionScore - exp.injection_score) > 1e-6) {
+    failures.push(`  ${i} injection score: got ${shadowD.injectionScore}, want ${exp.injection_score}`);
+  }
+  check(i, "injection categories", shadowD.injectionCategories, exp.injection_categories);
+  check(i, "shadow action", shadowD.action, exp.action_shadow);
+  check(i, "enforce action", enforceD.action, exp.action_enforce);
+  check(i, "shadow matched rules", shadowD.matchedRules, exp.matched_shadow);
+  check(i, "enforce matched rules", enforceD.matchedRules, exp.matched_enforce);
+});
+
+console.log(`\nINJECTION PARITY (block_threshold = ${threshold})`);
+console.log(`attacks    ${String(injStats.attacks.total).padStart(5)} ${String(injStats.attacks.hit).padStart(5)} ${String(injStats.attacks.total - injStats.attacks.hit).padStart(5)}`);
+console.log(`benign     ${String(injStats.benign.total).padStart(5)} ${String(injStats.benign.hit).padStart(5)} ${String(injStats.benign.total - injStats.benign.hit).padStart(5)}`);
+
 if (failures.length) {
   console.log(`\nparity failures (${failures.length}):`);
   console.log(failures.slice(0, 40).join("\n"));
 }
-const ok = failures.length === 0 && dirtyHit === dirtyTotal && stats.clean.hit === stats.clean.total;
-console.log(`RESULT: ${ok ? "PASS — JS port matches the Python engine on all " + corpus.length + " corpus entries" : "FAIL"}`);
+const injOk = injStats.attacks.hit === injStats.attacks.total && injStats.benign.hit === injStats.benign.total;
+const ok = failures.length === 0 && dirtyHit === dirtyTotal && stats.clean.hit === stats.clean.total && injOk;
+const totalEntries = corpus.length + injectionCorpus.length;
+console.log(`RESULT: ${ok ? "PASS — JS port matches the Python engine on all " + totalEntries + " corpus entries" : "FAIL"}`);
 process.exit(ok ? 0 : 1);

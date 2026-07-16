@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Gatekeep · prompt firewall — live demo</title>
-<meta name="description" content="Type a prompt, watch it hit the checkpoint. Gatekeep blocks secrets, redacts PII, and audit-logs every decision. Runs entirely in your browser.">
+<meta name="description" content="Type a prompt, watch it hit the checkpoint. Gatekeep blocks secrets, redacts PII, screens for prompt injection, and audit-logs every decision. Runs entirely in your browser.">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' fill='%230b0b0f'/%3E%3Cpath d='M8 5h16v13c0 5-4 8-8 9-4-1-8-4-8-9z' fill='none' stroke='%23c4a35a' stroke-width='2.5'/%3E%3Cpath d='M12 15h8M16 11v8' stroke='%23c4a35a' stroke-width='2.5'/%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -23,6 +23,7 @@
     --block: #e05e5e;
     --redact: #e0a83c;
     --allow: #5cb17c;
+    --inject: #a08ce0;
     --display: "Cormorant", Georgia, serif;
     --mono: "JetBrains Mono", "Cascadia Code", Consolas, monospace;
     --body: "Outfit", "Segoe UI", sans-serif;
@@ -233,6 +234,24 @@
   .chip .cat { color: var(--faint); }
   .chip:hover .cat { color: var(--bg); }
 
+  /* ---------- injection mode toggle ---------- */
+  .mode-row { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; margin: 0 0 16px; }
+  .mode-row .chips-title { flex-basis: auto; margin-right: 4px; }
+  .mode-btn {
+    font-family: var(--mono);
+    font-size: 0.72rem;
+    letter-spacing: 0.08em;
+    color: var(--dim);
+    background: transparent;
+    border: 1px solid var(--line-2);
+    padding: 5px 12px;
+    cursor: pointer;
+    transition: all 0.12s;
+  }
+  .mode-btn:hover { color: var(--text); border-color: var(--line-2); }
+  .mode-btn.active { color: var(--bg); background: var(--steel); border-color: var(--steel); font-weight: 500; }
+  .mode-note { flex-basis: 100%; color: var(--faint); font-family: var(--body); font-weight: 300; font-size: 0.78rem; }
+
   .send-row { display: flex; align-items: center; gap: 14px; }
   #send {
     font-family: var(--mono);
@@ -324,6 +343,7 @@
   }
   .badge.secret { color: var(--block); }
   .badge.pii { color: var(--redact); }
+  .badge.injection { color: var(--inject); }
   .findings .det { color: var(--text); font-weight: 500; }
   .findings .span { color: var(--faint); }
   .findings .preview { color: var(--dim); margin-left: auto; }
@@ -331,6 +351,44 @@
 
   .rule-line { color: var(--faint); font-size: 0.76rem; margin-top: 10px; }
   .rule-line code { color: var(--dim); }
+
+  /* ---------- injection screen ---------- */
+  .inj-screen {
+    border: 1px solid rgba(160, 140, 224, 0.3);
+    background: var(--panel-2);
+    padding: 12px 14px;
+    margin-top: 14px;
+  }
+  .inj-screen .inj-title {
+    color: var(--inject);
+    font-size: 0.68rem;
+    letter-spacing: 0.2em;
+    margin-bottom: 10px;
+  }
+  .inj-meter {
+    position: relative;
+    height: 8px;
+    background: var(--panel);
+    border: 1px solid var(--line);
+    margin: 6px 0 4px;
+  }
+  .inj-meter .fill {
+    position: absolute;
+    inset: 0 auto 0 0;
+    background: linear-gradient(90deg, rgba(160, 140, 224, 0.35), var(--inject));
+    transition: width 0.35s cubic-bezier(0.2, 0.8, 0.2, 1);
+  }
+  .inj-meter .tick {
+    position: absolute;
+    top: -4px;
+    bottom: -4px;
+    width: 1px;
+    background: var(--block);
+  }
+  .inj-scale { display: flex; justify-content: space-between; color: var(--faint); font-size: 0.66rem; }
+  .inj-outcome { color: var(--dim); font-size: 0.78rem; margin-top: 8px; }
+  .inj-outcome b { color: var(--text); font-weight: 500; }
+  .inj-outcome .would { color: var(--redact); }
 
   /* ---------- model view ---------- */
   .modelview {
@@ -443,7 +501,10 @@
   <p class="intro">
     Gatekeep is a drop-in reverse proxy for the Anthropic API. It scans every prompt
     before the model sees it: secrets are blocked, personal data is redacted, and
-    everything is audit-logged without ever storing the raw text.
+    every prompt now also passes a <b>prompt-injection screen</b> — instruction
+    overrides, role hijacks, system-prompt leaks, delimiter smuggling, exfiltration
+    channels, and unicode obfuscation are scored against a block threshold.
+    Everything is audit-logged without ever storing the raw text.
     This page runs the same detection and policy pipeline, ported to JavaScript,
     entirely in your browser. No API key, no server, nothing leaves this page.
   </p>
@@ -451,13 +512,16 @@
   <div id="selftest-panel" role="region" aria-label="Engine self-test results">
     <div id="selftest-detail"></div>
     <p class="note">
-      On load, this page replayed the repo's red-team corpus
-      (<code>harness/corpus.jsonl</code>, the same file <code>harness/run_harness.py</code> scores)
-      through the in-browser engine: 30 dirty prompts and 20 clean traps built to bait false
-      positives (git SHAs, UUIDs, Luhn-invalid cards, invalid SSNs, code). Scoring is strict:
-      the decided action must equal the expected action exactly. The JS port is also
-      parity-tested against the Python engine finding-by-finding in CI style via
-      <code>demo/parity.test.js</code>.
+      On load, this page replayed both of the repo's red-team corpora through the
+      in-browser engine. <code>harness/corpus.jsonl</code>: 30 dirty prompts and 20 clean
+      traps built to bait false positives (git SHAs, UUIDs, Luhn-invalid cards, invalid
+      SSNs, code). <code>harness/injection_corpus.jsonl</code>: 52 injection attacks
+      across 9 techniques and 48 hard benigns that contain trigger words like
+      &ldquo;ignore&rdquo;, &ldquo;system&rdquo;, and &ldquo;developer mode&rdquo; in
+      innocent contexts. Scoring is strict: actions must match exactly, and injection
+      flagging is judged at the 0.8 block threshold. The JS port is also parity-tested
+      against the Python engine finding-by-finding via <code>demo/parity.test.js</code> —
+      all 150 entries, including per-finding scores and both policy modes.
     </p>
   </div>
 
@@ -471,7 +535,7 @@
         <label for="prompt" class="chips-title" style="display:block; margin-bottom:8px;">PROMPT, AS THE USER TYPED IT</label>
         <div class="scanwrap" id="scanwrap">
           <textarea id="prompt" spellcheck="false" autocomplete="off"
-            placeholder="Type anything. Paste an AWS key, a credit card number, an SSN, or a clean question, then send it through the checkpoint."></textarea>
+            placeholder="Type anything. Paste an AWS key, a credit card number, an SSN, a prompt-injection attempt, or a clean question, then send it through the checkpoint."></textarea>
         </div>
         <div class="meta-line">
           <span>client requests model: <span id="req-model"></span></span>
@@ -480,6 +544,17 @@
 
         <div class="chips" id="chips">
           <span class="chips-title">SAMPLES, STRAIGHT FROM THE RED-TEAM CORPUS</span>
+        </div>
+
+        <div class="chips" id="inj-chips">
+          <span class="chips-title">INJECTION ATTACKS, FROM THE INJECTION CORPUS</span>
+        </div>
+
+        <div class="mode-row" role="group" aria-label="Injection policy mode">
+          <span class="chips-title">INJECTION MODE</span>
+          <button class="mode-btn" data-mode="enforce" id="mode-enforce">ENFORCE · BLOCK ≥ 0.8</button>
+          <button class="mode-btn" data-mode="shadow" id="mode-shadow">SHADOW · LOG-AND-ALLOW</button>
+          <span class="mode-note" id="mode-note"></span>
         </div>
 
         <div class="send-row">
@@ -514,7 +589,7 @@
         <thead>
           <tr>
             <th>ts_utc</th><th>action</th><th>categories</th><th>detectors</th>
-            <th>prompt_sha256</th><th>model_routed</th><th>latency_ms</th>
+            <th>inj_score</th><th>prompt_sha256</th><th>model_routed</th><th>latency_ms</th>
           </tr>
         </thead>
         <tbody id="audit-body"></tbody>
@@ -531,18 +606,20 @@
 
   <footer>
     <span>GATEKEEP · MIT · <a href="https://github.com/ntrabazo/gatekeep" target="_blank" rel="noopener">github.com/ntrabazo/gatekeep</a></span>
-    <span>engine: JS port of the Python detectors, parity-tested on all 50 corpus entries</span>
-    <span>policy source: <code>policies.yaml</code> · secret&nbsp;»&nbsp;block · pii&nbsp;»&nbsp;redact · default&nbsp;»&nbsp;allow</span>
+    <span>engine: JS port of the Python detectors, parity-tested on all 150 corpus entries</span>
+    <span>policy source: <code>policies.yaml</code> · secret&nbsp;»&nbsp;block · pii&nbsp;»&nbsp;redact · injection&nbsp;»&nbsp;score&nbsp;·&nbsp;shadow/enforce · default&nbsp;»&nbsp;allow</span>
   </footer>
 </div>
 
 <script src="gatekeep.js"></script>
 <script src="corpus.js"></script>
+<script src="injection_corpus.js"></script>
 <script>
 (function () {
   "use strict";
   const G = window.Gatekeep;
   const CORPUS = window.GatekeepCorpus;
+  const INJ_CORPUS = window.GatekeepInjectionCorpus;
   const REQUESTED_MODEL = "claude-sonnet-5";
   const REDUCED = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
@@ -551,27 +628,67 @@
 
   $("req-model").textContent = REQUESTED_MODEL;
 
-  /* ---------- samples (indices into the corpus, 0-based) ---------- */
+  /* ---------- injection mode (demo starts in enforce so blocks are visible;
+     the product ships shadow-by-default — policies.yaml) ---------- */
+  let injectionMode = "enforce";
+  const THRESHOLD = G.POLICIES.injection.blockThreshold;
+
+  function policiesForMode() {
+    const p = JSON.parse(JSON.stringify(G.POLICIES));
+    p.injection.mode = injectionMode;
+    return p;
+  }
+
+  function renderModeButtons() {
+    $("mode-enforce").classList.toggle("active", injectionMode === "enforce");
+    $("mode-shadow").classList.toggle("active", injectionMode === "shadow");
+    $("mode-note").textContent = injectionMode === "enforce"
+      ? "enforce blocks at score ≥ " + THRESHOLD.toFixed(1) + " — the shipped default is shadow; this demo starts in enforce so blocks are visible."
+      : "shadow is the shipped default: injection is scored and audit-logged, but never blocks. Flip to enforce to see the same prompt stopped.";
+  }
+
+  for (const id of ["mode-enforce", "mode-shadow"]) {
+    $(id).addEventListener("click", (e) => {
+      const next = e.currentTarget.dataset.mode;
+      if (next === injectionMode) return;
+      injectionMode = next;
+      renderModeButtons();
+      if (ta.value.trim() && auditRows.length) send(); // re-run so the mode change is visible
+    });
+  }
+
+  /* ---------- samples (indices into each corpus, 0-based) ---------- */
   const SAMPLES = [
     ["aws key", 0], ["github token", 3], ["jwt", 9], ["entropy secret", 12],
     ["credit card", 19], ["ssn + email", 29], ["clean", 31],
     ["trap · git sha", 34], ["trap · invalid card", 39],
   ];
-  const chips = $("chips");
-  for (const [label, idx] of SAMPLES) {
-    const b = document.createElement("button");
-    b.className = "chip";
-    b.textContent = label;
-    b.title = CORPUS[idx].text;
-    b.addEventListener("click", () => {
-      ta.value = CORPUS[idx].text;
-      updateSend();
-      send();
-    });
-    chips.appendChild(b);
-  }
+  const INJ_SAMPLES = [
+    ["instruction override", 0], ["role hijack · DAN", 12], ["system prompt leak", 22],
+    ["delimiter smuggle", 29], ["exfil · image beacon", 41], ["zero-width evasion", 42],
+    ["homoglyph evasion", 44], ["indirect · poisoned doc", 47],
+    ["trap · ignore my typos", 52], ["trap · developer mode", 78],
+  ];
 
-  /* ---------- self-test: replay the harness corpus in-browser ---------- */
+  function addChips(containerId, corpus, samples) {
+    const box = $(containerId);
+    for (const [label, idx] of samples) {
+      const b = document.createElement("button");
+      b.className = "chip";
+      b.textContent = label;
+      b.title = corpus[idx].text;
+      b.addEventListener("click", () => {
+        ta.value = corpus[idx].text;
+        updateSend();
+        send();
+      });
+      box.appendChild(b);
+    }
+  }
+  addChips("chips", CORPUS, SAMPLES);
+  addChips("inj-chips", INJ_CORPUS, INJ_SAMPLES);
+
+  /* ---------- self-test: replay both corpora in-browser ---------- */
   function selfTest() {
     const t0 = performance.now();
     const stats = { secret: { total: 0, hit: 0 }, pii: { total: 0, hit: 0 }, clean: { total: 0, hit: 0 } };
@@ -583,14 +700,30 @@
       if (got === e.expect) stats[e.label].hit += 1;
       else if (e.label === "clean" && got === "block") fpBlocks += 1;
     }
+
+    // Injection corpus: flagged means document score >= block threshold, the
+    // same rule harness/run_injection_eval.py scores (and EVAL_CARD.md reports).
+    const inj = { attack: { total: 0, hit: 0 }, benign: { total: 0, hit: 0 } };
+    for (const e of INJ_CORPUS) {
+      const score = G.documentScore(G.scanInjection(e.text));
+      const flagged = score >= THRESHOLD;
+      const bucket = e.label === "injection" ? inj.attack : inj.benign;
+      bucket.total += 1;
+      if (flagged === e.expect_flag) bucket.hit += 1;
+    }
+
     const ms = performance.now() - t0;
     const dirtyTotal = stats.secret.total + stats.pii.total;
     const dirtyHit = stats.secret.hit + stats.pii.hit;
-    const pass = dirtyHit === dirtyTotal && stats.clean.hit === stats.clean.total && fpBlocks === 0;
+    const basePass = dirtyHit === dirtyTotal && stats.clean.hit === stats.clean.total && fpBlocks === 0;
+    const injPass = inj.attack.hit === inj.attack.total && inj.benign.hit === inj.benign.total;
+    const pass = basePass && injPass;
+    const totalHit = dirtyHit + stats.clean.hit + inj.attack.hit + inj.benign.hit;
+    const totalAll = CORPUS.length + INJ_CORPUS.length;
 
     $("selftest-dot").className = "dot " + (pass ? "pass" : "fail");
     $("selftest-text").textContent =
-      "SELF-TEST " + (dirtyHit + stats.clean.hit) + "/" + CORPUS.length + (pass ? " PASS" : " FAIL");
+      "SELF-TEST " + totalHit + "/" + totalAll + (pass ? " PASS" : " FAIL");
 
     const d = $("selftest-detail");
     const tbl = document.createElement("table");
@@ -605,12 +738,18 @@
       const s = stats[label];
       for (const v of [label, s.total, s.hit, s.total - s.hit]) r.insertCell().textContent = v;
     }
+    for (const [label, s] of [["injection attacks", inj.attack], ["hard benigns", inj.benign]]) {
+      const r = tbl.insertRow();
+      for (const v of [label, s.total, s.hit, s.total - s.hit]) r.insertCell().textContent = v;
+    }
     d.replaceChildren(tbl);
     const summary = document.createElement("div");
     summary.style.fontSize = "0.82rem";
     summary.textContent =
-      "CATCH RATE " + dirtyHit + "/" + dirtyTotal + " (" + ((dirtyHit / dirtyTotal) * 100).toFixed(1) +
-      "%) · FALSE-POSITIVE BLOCKS " + fpBlocks + " · " + CORPUS.length + " prompts scanned in " +
+      "SECRETS/PII CATCH " + dirtyHit + "/" + dirtyTotal +
+      " · INJECTION CATCH " + inj.attack.hit + "/" + inj.attack.total +
+      " · HARD-BENIGN FALSE FLAGS " + (inj.benign.total - inj.benign.hit) + "/" + inj.benign.total +
+      " · FALSE-POSITIVE BLOCKS " + fpBlocks + " · " + totalAll + " prompts scanned in " +
       ms.toFixed(1) + " ms · RESULT: " + (pass ? "PASS" : "FAIL");
     d.appendChild(summary);
   }
@@ -626,20 +765,22 @@
 
   function inspect(text) {
     const t0 = performance.now();
+    const pol = policiesForMode();
     const scanned = text.slice(0, G.SCAN_CAP);
-    const findings = G.runAll(scanned, G.POLICIES);
-    const decision = G.decide([text], [findings], G.POLICIES);
+    const findings = G.runAll(scanned, pol);
+    const decision = G.decide([text], [findings], pol);
     const sha = G.sha256Hex(text);
     const latencyMs = performance.now() - t0;
 
     const categories = [...new Set(findings.map((f) => f.category))].sort().join(",");
     const detectorNames = [...new Set(findings.map((f) => f.detector))].sort();
     if (text.length > G.SCAN_CAP) detectorNames.push("scan_truncated");
-    const routed = decision.action === "block" ? null : G.routeModel(REQUESTED_MODEL, decision, G.POLICIES);
+    const routed = decision.action === "block" ? null : G.routeModel(REQUESTED_MODEL, decision, pol);
 
     return {
       text, findings, decision, sha, latencyMs, categories,
       detectors: detectorNames.join(","), modelRouted: routed,
+      mode: injectionMode,
       tsUtc: new Date().toISOString(),
     };
   }
@@ -660,10 +801,15 @@
     const stamp = el("div", "stamp v-" + r.decision.action + (REDUCED ? "" : " in"), r.decision.action.toUpperCase());
     row.appendChild(stamp);
 
+    const injBlocked = r.decision.matchedRules.indexOf("injection:block") !== -1;
     const detail = el("div", "verdict-detail");
     const lead = el("div", "lead");
     if (r.decision.action === "block") {
-      lead.textContent = "HTTP 403 returned to the client. The request never left the checkpoint.";
+      lead.textContent = injBlocked
+        ? "HTTP 403 returned to the client. The injection screen tripped in enforce mode: score " +
+          r.decision.injectionScore.toFixed(2) + " ≥ " + THRESHOLD.toFixed(1) +
+          " threshold. The request never left the checkpoint."
+        : "HTTP 403 returned to the client. The request never left the checkpoint.";
     } else if (r.decision.action === "redact") {
       lead.textContent = "Sensitive spans replaced, then forwarded. Routed to " + r.modelRouted +
         ": policies.yaml sends redacted traffic to a cheaper model.";
@@ -684,16 +830,54 @@
     row.appendChild(detail);
     box.appendChild(row);
 
+    // Injection screen readout — rendered whenever the screen found something.
+    const injFindings = r.findings.filter((f) => f.category === "injection");
+    if (injFindings.length) {
+      const scr = el("div", "inj-screen");
+      scr.appendChild(el("div", "inj-title", "INJECTION SCREEN · TIER-1 HEURISTICS · " + r.mode.toUpperCase() + " MODE"));
+
+      const meter = el("div", "inj-meter");
+      const fill = el("div", "fill");
+      fill.style.width = (r.decision.injectionScore * 100).toFixed(0) + "%";
+      meter.appendChild(fill);
+      const tick = el("div", "tick");
+      tick.style.left = (THRESHOLD * 100).toFixed(0) + "%";
+      tick.title = "block threshold " + THRESHOLD.toFixed(1);
+      meter.appendChild(tick);
+      scr.appendChild(meter);
+
+      const scale = el("div", "inj-scale");
+      scale.appendChild(el("span", null, "score " + r.decision.injectionScore.toFixed(2)));
+      scale.appendChild(el("span", null, "block threshold " + THRESHOLD.toFixed(1)));
+      scr.appendChild(scale);
+
+      const outcome = el("div", "inj-outcome");
+      const techs = r.decision.injectionCategories.join(", ");
+      const over = r.decision.injectionScore >= THRESHOLD;
+      if (injBlocked) {
+        outcome.innerHTML = "<b>" + techs + "</b> — over the threshold in enforce mode: <b>blocked</b>.";
+      } else if (over) {
+        outcome.innerHTML = "<b>" + techs + "</b> — over the threshold, but shadow mode logs and allows. " +
+          "<span class='would'>Enforce mode would have blocked this prompt.</span>";
+      } else {
+        outcome.innerHTML = "<b>" + techs + "</b> — scored below the block threshold: logged, allowed in either mode.";
+      }
+      scr.appendChild(outcome);
+      box.appendChild(scr);
+    }
+
     box.appendChild(el("div", "findings-title", "FINDINGS · previews are 4 chars max, raw matches never leave the detector layer"));
     const ul = el("ul", "findings");
     if (r.findings.length === 0) {
-      ul.appendChild(el("li", "none", "none · 10 detectors ran: 5 named secret patterns, entropy fallback, ssn, credit card, email, phone"));
+      ul.appendChild(el("li", "none", "none · every detector ran: 5 named secret patterns, entropy fallback, ssn, credit card, email, phone, and the injection screen (5 techniques + unicode obfuscation)"));
     } else {
       for (const f of r.findings) {
         const li = el("li");
         li.appendChild(el("span", "badge " + f.category, f.category.toUpperCase()));
         li.appendChild(el("span", "det", f.detector));
-        li.appendChild(el("span", "span", "chars " + f.span[0] + "–" + f.span[1]));
+        li.appendChild(el("span", "span", "chars " + f.span[0] + "–" + f.span[1] +
+          (f.category === "injection" ? " (normalized)" : "")));
+        if (f.category === "injection") li.appendChild(el("span", "span", "weight " + f.score.toFixed(2)));
         li.appendChild(el("span", "preview", "preview " + JSON.stringify(f.preview)));
         ul.appendChild(li);
       }
@@ -750,6 +934,7 @@
       tr.appendChild(el("td", "act " + r.decision.action, r.decision.action));
       tr.appendChild(el("td", null, r.categories || "·"));
       tr.appendChild(el("td", null, r.detectors || "·"));
+      tr.appendChild(el("td", null, r.decision.injectionScore ? r.decision.injectionScore.toFixed(2) : "0.00"));
       const hash = el("td", "hash", r.sha.slice(0, 12) + "…");
       hash.title = r.sha;
       tr.appendChild(hash);
@@ -793,6 +978,7 @@
   });
 
   updateSend();
+  renderModeButtons();
   selfTest();
 })();
 </script>
