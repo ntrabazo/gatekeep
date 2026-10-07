@@ -1,9 +1,9 @@
 # Gatekeep live demo
 
 A single-screen static page: pick an example or type a prompt, watch it hit the checkpoint.
-Shows the blocked / redacted / allowed verdict in plain language, exactly what the model
-would have received (redactions highlighted), what was found, and a live audit trail with
-the same columns as the proxy's SQLite table. Detector internals (spans, weights, the 403
+The prompt and its result sit side by side: the blocked / redacted / allowed verdict in
+plain language, exactly what the model would have received (redactions highlighted), what
+was found, and a live audit trail with the same columns as the proxy's SQLite table. Detector internals (spans, weights, the 403
 body, the matched policy rule) sit behind a "Technical details" toggle.
 
 Open [`index.html`](index.html) in any browser. It runs entirely client-side: no API key,
@@ -18,8 +18,8 @@ The page does not approximate the engine, it ports it:
   engine, router) with the `policies.yaml` values inlined.
 - On load, the page replays both red-team corpora (`harness/corpus.jsonl` and
   `harness/injection_corpus.jsonl`) through the in-browser engine and shows the result in
-  the self-test badge in the header. Each example button's outcome tag is computed live by
-  the same engine, never hardcoded.
+  the self-test badge in the header. Example prompts are labeled by what they contain,
+  never by the expected outcome: the verdict only appears once you send one.
 - [`parity.test.js`](parity.test.js) goes further: it compares the JS port against the
   real Python engine entry by entry — action, redacted text, every finding's span and
   preview, audit CSVs, and SHA-256 — using a golden dump produced by the Python engine.

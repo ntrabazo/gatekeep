@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Gatekeep · prompt firewall live demo</title>
-<meta name="description" content="Pick a prompt and watch it hit the checkpoint. Gatekeep blocks secrets, redacts personal data, stops prompt-injection attempts, and audit-logs every decision. Runs entirely in your browser.">
+<meta name="description" content="Send a prompt and watch it hit the checkpoint. Gatekeep blocks secrets, redacts personal data, stops prompt-injection attempts, and audit-logs every decision. Runs entirely in your browser.">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' fill='%230b0b0f'/%3E%3Cpath d='M8 5h16v13c0 5-4 8-8 9-4-1-8-4-8-9z' fill='none' stroke='%23c4a35a' stroke-width='2.5'/%3E%3Cpath d='M12 15h8M16 11v8' stroke='%23c4a35a' stroke-width='2.5'/%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -59,34 +59,29 @@
   button, textarea { font: inherit; color: inherit; }
   :focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
 
-  .wrap { max-width: 1180px; margin: 0 auto; padding: 26px 24px 64px; }
+  .wrap { max-width: 1180px; margin: 0 auto; padding: 18px 24px 64px; }
 
   /* ---------- header ---------- */
   header {
     display: flex;
     flex-wrap: wrap;
     align-items: center;
-    gap: 14px 22px;
-    padding-bottom: 18px;
+    gap: 12px 22px;
+    padding-bottom: 14px;
     border-bottom: 1px solid var(--line);
     animation: rise 0.5s 0.02s cubic-bezier(0.2, 0.8, 0.2, 1) both;
   }
-  .mark { display: flex; align-items: center; gap: 12px; }
+  .mark { display: flex; align-items: center; }
   .mark svg { display: block; }
-  .wordmark {
-    font-family: var(--display);
-    font-weight: 400;
-    font-size: 2.3rem;
-    line-height: 0.95;
-  }
+  .wordmark { font-family: var(--display); font-weight: 400; font-size: 1.95rem; line-height: 0.95; }
   .wordmark em { font-style: italic; color: var(--gold); }
   .wordmark small {
     display: block;
     font-family: var(--mono);
-    font-size: 0.66rem;
+    font-size: 0.62rem;
     letter-spacing: 0.22em;
     color: var(--dim);
-    margin-top: 8px;
+    margin-top: 6px;
   }
   .head-right { margin-left: auto; display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
   .head-btn {
@@ -95,7 +90,7 @@
     color: var(--dim);
     background: var(--panel-2);
     border: 1px solid var(--line-2);
-    padding: 7px 13px;
+    padding: 6px 12px;
     cursor: pointer;
     text-decoration: none;
     display: inline-flex;
@@ -108,47 +103,18 @@
   .dot.pass { background: var(--allow); box-shadow: 0 0 8px rgba(108, 197, 143, 0.7); }
   .dot.fail { background: var(--block); box-shadow: 0 0 8px rgba(239, 111, 111, 0.7); }
 
-  /* ---------- hero ---------- */
-  .hero {
-    padding: 34px 0 26px;
-    animation: rise 0.5s 0.08s cubic-bezier(0.2, 0.8, 0.2, 1) both;
-  }
+  /* ---------- intro ---------- */
+  .hero { padding: 14px 0 14px; animation: rise 0.5s 0.08s cubic-bezier(0.2, 0.8, 0.2, 1) both; }
   .headline {
     font-family: var(--display);
     font-weight: 400;
-    font-size: clamp(2.1rem, 4.2vw, 3.2rem);
-    line-height: 1.05;
+    font-size: clamp(1.8rem, 3vw, 2.35rem);
+    line-height: 1.1;
     letter-spacing: -0.01em;
-    max-width: 20ch;
   }
   .headline em { font-style: italic; color: var(--gold); }
-  .lede {
-    margin-top: 14px;
-    font-size: 1.06rem;
-    line-height: 1.7;
-    color: var(--dim);
-    max-width: 62ch;
-  }
+  .lede { margin-top: 4px; font-size: 1.02rem; line-height: 1.6; color: var(--dim); }
   .lede b { color: var(--text); font-weight: 500; }
-
-  .steps {
-    list-style: none;
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    margin-top: 24px;
-    border-top: 1px solid var(--line);
-    border-bottom: 1px solid var(--line);
-  }
-  .steps li { padding: 14px 18px 14px 0; display: flex; gap: 12px; align-items: baseline; }
-  .steps li + li { padding-left: 18px; border-left: 1px solid var(--line); }
-  .steps .n { font-family: var(--mono); font-size: 0.78rem; color: var(--gold); flex: none; }
-  .steps .t { color: var(--text); font-weight: 500; }
-  .steps .d { color: var(--dim); font-size: 0.92rem; }
-  .local-note { margin-top: 12px; color: var(--faint); font-size: 0.86rem; }
-  @media (max-width: 760px) {
-    .steps { grid-template-columns: 1fr; }
-    .steps li + li { padding-left: 0; border-left: none; border-top: 1px solid var(--line); }
-  }
 
   /* ---------- self-test panel ---------- */
   #selftest-panel {
@@ -156,127 +122,79 @@
     border: 1px solid var(--line-2);
     background: var(--panel-2);
     padding: 16px 18px;
-    margin: 0 0 22px;
+    margin: 14px 0 4px;
   }
   #selftest-panel.open { display: block; animation: rise 0.3s ease both; }
   #selftest-panel table { border-collapse: collapse; margin: 4px 0 12px; font-family: var(--mono); }
-  #selftest-panel th, #selftest-panel td {
-    text-align: right;
-    padding: 5px 20px 5px 0;
-    font-size: 0.82rem;
-    border-bottom: 1px solid var(--line);
-  }
+  #selftest-panel th, #selftest-panel td { text-align: right; padding: 5px 20px 5px 0; font-size: 0.82rem; border-bottom: 1px solid var(--line); }
   #selftest-panel th { color: var(--faint); font-weight: 400; }
   #selftest-panel td { color: var(--text); }
   #selftest-panel td:first-child, #selftest-panel th:first-child { text-align: left; }
   #selftest-panel .summary { font-family: var(--mono); font-size: 0.8rem; color: var(--dim); }
   #selftest-panel .note { color: var(--dim); font-size: 0.92rem; line-height: 1.7; max-width: 80ch; margin-top: 10px; }
 
-  /* ---------- layout ---------- */
+  /* ---------- workspace ---------- */
   .layout {
     display: grid;
-    grid-template-columns: minmax(340px, 5fr) 7fr;
+    grid-template-columns: minmax(290px, 4fr) 8fr;
     gap: 18px;
     align-items: start;
   }
-  @media (max-width: 950px) { .layout { grid-template-columns: 1fr; } }
-  @media (min-width: 951px) { .col-right { position: sticky; top: 16px; } }
-  #decision-panel { scroll-margin-top: 12px; }
-  .ex-anchor { scroll-margin-top: 12px; }
-  .try-another {
-    display: none;
-    margin-top: 18px;
-    background: transparent;
-    border: 1px solid var(--line-2);
-    color: var(--gold);
-    font-weight: 500;
-    font-size: 0.9rem;
-    padding: 9px 14px;
-    cursor: pointer;
-  }
-  @media (max-width: 950px) { .try-another { display: inline-block; } }
-  @media (pointer: coarse) { .kbd-hint { display: none; } }
-
-  .panel { background: var(--panel); border: 1px solid var(--line); padding: 22px; }
+  .panel { background: var(--panel); border: 1px solid var(--line); padding: 18px 20px; }
+  .col-left, .col-right { min-width: 0; } /* let the swipe row scroll instead of widening the page */
   .col-left { animation: rise 0.5s 0.14s cubic-bezier(0.2, 0.8, 0.2, 1) both; }
   .col-right { animation: rise 0.5s 0.2s cubic-bezier(0.2, 0.8, 0.2, 1) both; }
-  .audit-panel { margin-top: 18px; animation: rise 0.5s 0.26s cubic-bezier(0.2, 0.8, 0.2, 1) both; }
+  @media (min-width: 951px) { .col-right { position: sticky; top: 14px; } }
 
-  .step-head { display: flex; align-items: baseline; gap: 12px; margin-bottom: 16px; }
-  .step-head .k { font-family: var(--mono); font-size: 0.74rem; color: var(--gold); letter-spacing: 0.08em; }
-  .step-head h2 { font-size: 1.18rem; font-weight: 600; letter-spacing: 0.005em; }
-  .step-head .rule { flex: 1; border-top: 1px solid var(--line); align-self: center; }
-
-  .field-label { display: block; font-size: 0.86rem; font-weight: 600; color: var(--dim); margin-bottom: 8px; }
+  .panel-title { display: flex; align-items: baseline; gap: 12px; margin-bottom: 10px; }
+  .panel-title h2 { font-size: 1.08rem; font-weight: 600; }
+  .panel-title .rule { flex: 1; border-top: 1px solid var(--line); align-self: center; }
+  .panel-title .hint { font-size: 0.82rem; color: var(--faint); }
 
   /* ---------- examples ---------- */
-  .ex-group + .ex-group { margin-top: 14px; }
-  .ex-head { font-size: 0.8rem; font-weight: 500; color: var(--faint); margin-bottom: 7px; }
-  .ex-list { display: flex; flex-direction: column; gap: 6px; }
+  .ex-list { display: flex; flex-direction: column; gap: 5px; }
   .ex {
-    display: flex;
+    display: block;
     width: 100%;
-    justify-content: space-between;
-    align-items: center;
-    gap: 12px;
-    font-size: 0.9rem;
+    font-size: 0.92rem;
     font-weight: 500;
     color: var(--text);
     background: var(--panel-2);
     border: 1px solid var(--line-2);
-    padding: 7px 10px 7px 12px;
+    padding: 7px 12px;
     cursor: pointer;
     text-align: left;
     transition: border-color 0.12s, background 0.12s;
   }
   .ex:hover { border-color: var(--gold); background: var(--raise); }
-  .ex[aria-pressed="true"] { border-color: var(--gold); background: rgba(196, 163, 90, 0.12); box-shadow: inset 0 0 0 1px var(--gold); }
-  .tag {
-    font-family: var(--mono);
-    font-size: 0.66rem;
-    font-weight: 500;
-    letter-spacing: 0.06em;
-    text-transform: uppercase;
-    padding: 2px 6px;
-    border: 1px solid currentColor;
-    white-space: nowrap;
-  }
-  .t-block { color: var(--block); }
-  .t-redact { color: var(--redact); }
-  .t-allow { color: var(--allow); }
-  .t-flag { color: var(--inject); }
-
-  details.more { margin-top: 14px; }
-  details.more > summary {
-    cursor: pointer;
-    list-style: none;
-    font-size: 0.86rem;
+  .ex[aria-pressed="true"] { border-color: var(--gold); background: rgba(196, 163, 90, 0.12); box-shadow: inset 3px 0 0 var(--gold); }
+  .ex.extra { display: none; }
+  .ex-list.show-more .ex.extra { display: block; }
+  .more-btn {
+    margin-top: 10px;
+    background: none;
+    border: none;
+    font-size: 0.88rem;
     font-weight: 500;
     color: var(--gold);
-    display: inline-flex;
-    align-items: center;
-    gap: 7px;
+    cursor: pointer;
+    padding: 2px 0;
   }
-  details.more > summary::-webkit-details-marker { display: none; }
-  details.more > summary::before { content: "+"; font-family: var(--mono); width: 1ch; }
-  details.more[open] > summary::before { content: "\2212"; }
-  details.more > summary:hover { color: var(--gold-hi); }
-  details.more .ex-group:first-of-type { margin-top: 12px; }
+  .more-btn:hover { color: var(--gold-hi); }
+  .swipe-hint { display: none; }
 
-  /* ---------- prompt box ---------- */
-  .or-rule { display: flex; align-items: center; gap: 12px; color: var(--faint); font-size: 0.82rem; margin: 20px 0 12px; }
-  .or-rule::before, .or-rule::after { content: ""; flex: 1; border-top: 1px solid var(--line); }
+  /* ---------- prompt ---------- */
   .scanwrap { position: relative; overflow: hidden; }
   textarea {
     width: 100%;
-    min-height: 116px;
+    min-height: 72px;
     resize: vertical;
     background: var(--panel-2);
     border: 1px solid var(--line-2);
     font-family: var(--mono);
-    font-size: 0.9rem;
+    font-size: 0.92rem;
     line-height: 1.6;
-    padding: 12px 13px;
+    padding: 11px 13px;
     display: block;
     color: var(--text);
   }
@@ -292,17 +210,17 @@
     animation: sweep 0.38s linear both;
   }
   @keyframes sweep { to { transform: translateY(100%); } }
-  .meta-line { display: flex; justify-content: space-between; gap: 10px; color: var(--faint); font-size: 0.8rem; margin-top: 7px; }
+  .meta-line { display: flex; justify-content: space-between; gap: 10px; color: var(--faint); font-size: 0.8rem; margin-top: 6px; }
   .meta-line code { font-family: var(--mono); font-size: 0.78rem; color: var(--dim); }
 
-  .send-row { display: flex; align-items: center; flex-wrap: wrap; gap: 14px; margin-top: 16px; }
+  .send-row { display: flex; align-items: center; flex-wrap: wrap; gap: 10px 14px; margin-top: 10px; }
   #send {
     font-weight: 600;
     font-size: 0.95rem;
     color: var(--bg);
     background: var(--gold);
     border: 1px solid var(--gold);
-    padding: 11px 22px;
+    padding: 9px 20px;
     cursor: pointer;
     transition: background 0.15s, transform 0.06s;
   }
@@ -311,27 +229,19 @@
   #send:disabled { background: transparent; border-color: var(--line-2); color: var(--faint); cursor: not-allowed; }
   .kbd-hint { color: var(--faint); font-size: 0.82rem; }
   .kbd-hint kbd { font-family: var(--mono); font-size: 0.76rem; color: var(--dim); border: 1px solid var(--line-2); padding: 1px 5px; }
+  @media (pointer: coarse) { .kbd-hint { display: none; } }
 
-  /* ---------- mode switch ---------- */
-  .mode { margin-top: 20px; padding-top: 16px; border-top: 1px solid var(--line); }
-  .mode .field-label { margin-bottom: 9px; }
+  .mode { display: flex; align-items: center; gap: 9px; flex-wrap: wrap; margin-top: 9px; }
+  .mode .lbl { font-size: 0.84rem; color: var(--dim); }
   .seg { display: inline-flex; border: 1px solid var(--line-2); }
-  .seg button {
-    background: transparent;
-    border: none;
-    padding: 7px 14px;
-    font-size: 0.88rem;
-    font-weight: 500;
-    color: var(--dim);
-    cursor: pointer;
-  }
+  .seg button { background: transparent; border: none; padding: 5px 11px; font-size: 0.84rem; font-weight: 500; color: var(--dim); cursor: pointer; }
   .seg button + button { border-left: 1px solid var(--line-2); }
   .seg button:hover { color: var(--text); }
   .seg button[aria-pressed="true"] { background: var(--gold); color: var(--bg); font-weight: 600; }
-  .mode-note { color: var(--faint); font-size: 0.86rem; line-height: 1.6; margin-top: 9px; }
 
   /* ---------- decision ---------- */
-  .empty-state { border: 1px dashed var(--line-2); color: var(--dim); padding: 34px 20px; text-align: center; }
+  .result { margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--line); }
+  .empty-state { border: 1px dashed var(--line-2); color: var(--dim); padding: 26px 20px; text-align: center; }
 
   .verdict {
     --vc: var(--allow);
@@ -339,33 +249,32 @@
     border: 1px solid var(--line);
     border-left: 3px solid var(--vc);
     background: var(--vbg);
-    padding: 16px 20px 18px;
+    padding: 12px 16px 13px;
   }
   .verdict.v-block  { --vc: var(--block);  --vbg: rgba(239, 111, 111, 0.08); }
   .verdict.v-redact { --vc: var(--redact); --vbg: rgba(232, 176, 74, 0.08); }
   .verdict.v-flag   { --vc: var(--inject); --vbg: rgba(182, 166, 242, 0.08); }
   .verdict.in { animation: pop 0.28s cubic-bezier(0.2, 1.3, 0.4, 1) both; }
   @keyframes pop { from { opacity: 0; transform: translateY(6px) scale(0.985); } to { opacity: 1; transform: none; } }
-  .v-top { display: flex; align-items: center; gap: 10px; color: var(--vc); }
+  .v-top { display: flex; align-items: center; gap: 9px; color: var(--vc); }
   .v-top svg { flex: none; }
-  .v-word { font-family: var(--display); font-style: italic; font-weight: 500; font-size: 2.5rem; line-height: 1; }
-  .v-lead { margin-top: 10px; font-size: 1.04rem; color: var(--text); }
-  .v-why { margin-top: 4px; color: var(--dim); }
+  .v-word { font-family: var(--display); font-style: italic; font-weight: 500; font-size: 1.9rem; line-height: 1; }
+  .v-lead { margin-top: 5px; font-size: 1.02rem; color: var(--text); }
+  .v-why { margin-top: 2px; color: var(--dim); }
 
-  .sub { margin-top: 20px; }
-  .sub-head { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; flex-wrap: wrap; margin-bottom: 8px; }
-  .sub-head h3 { font-size: 0.95rem; font-weight: 600; color: var(--text); }
+  .sub { margin-top: 12px; }
+  .sub-head { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; flex-wrap: wrap; margin-bottom: 7px; }
+  .sub-head h3 { font-size: 0.93rem; font-weight: 600; color: var(--text); }
   .sub-head .aside { font-size: 0.82rem; color: var(--faint); }
   .sub-head .aside code { font-family: var(--mono); font-size: 0.78rem; color: var(--dim); }
 
   .modelview {
     background: var(--panel-2);
     border: 1px solid var(--line-2);
-    padding: 14px;
+    padding: 11px 13px;
     font-family: var(--mono);
-    font-size: 0.92rem;
-    line-height: 1.75;
-    min-height: 60px;
+    font-size: 0.9rem;
+    line-height: 1.7;
     word-break: break-word;
     color: var(--text);
   }
@@ -376,9 +285,6 @@
     font-family: var(--body);
     font-size: 0.95rem;
     text-align: center;
-    display: flex;
-    align-items: center;
-    justify-content: center;
   }
   mark.redaction {
     background: rgba(232, 176, 74, 0.14);
@@ -390,7 +296,7 @@
     white-space: nowrap;
   }
 
-  .found { list-style: none; display: flex; flex-direction: column; gap: 6px; }
+  .found { list-style: none; display: flex; flex-direction: column; gap: 5px; }
   .found li {
     display: flex;
     align-items: center;
@@ -398,24 +304,34 @@
     flex-wrap: wrap;
     border: 1px solid var(--line);
     background: var(--panel-2);
-    padding: 9px 12px;
+    padding: 7px 12px;
   }
   .found .what { color: var(--text); font-weight: 500; }
   .found .then { margin-left: auto; font-size: 0.86rem; color: var(--dim); }
   .found .none { color: var(--dim); border-style: dashed; }
+  .tag {
+    font-family: var(--mono);
+    font-size: 0.66rem;
+    font-weight: 500;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    padding: 2px 6px;
+    border: 1px solid currentColor;
+    white-space: nowrap;
+  }
   .c-secret { color: var(--block); }
   .c-pii { color: var(--redact); }
   .c-injection { color: var(--inject); }
 
-  .meter-box { margin-top: 10px; border: 1px solid rgba(182, 166, 242, 0.3); background: var(--panel-2); padding: 12px 14px; }
-  .meter { position: relative; height: 10px; background: var(--panel); border: 1px solid var(--line); margin: 8px 0 6px; }
+  .meter-box { margin-top: 8px; border: 1px solid rgba(182, 166, 242, 0.3); background: var(--panel-2); padding: 10px 13px; }
+  .meter { position: relative; height: 10px; background: var(--panel); border: 1px solid var(--line); margin: 7px 0 5px; }
   .meter .fill { position: absolute; inset: 0 auto 0 0; background: linear-gradient(90deg, rgba(182, 166, 242, 0.35), var(--inject)); transition: width 0.35s cubic-bezier(0.2, 0.8, 0.2, 1); }
   .meter .tick { position: absolute; top: -5px; bottom: -5px; width: 2px; background: var(--block); }
   .meter-scale { display: flex; justify-content: space-between; font-size: 0.82rem; color: var(--dim); }
   .meter-scale b { color: var(--text); font-weight: 600; }
-  .meter-note { font-size: 0.88rem; color: var(--dim); margin-top: 6px; }
+  .meter-note { font-size: 0.86rem; color: var(--dim); margin-top: 4px; }
 
-  details.tech { margin-top: 18px; border-top: 1px solid var(--line); padding-top: 12px; }
+  details.tech { margin-top: 12px; }
   details.tech > summary {
     cursor: pointer;
     list-style: none;
@@ -429,7 +345,7 @@
   details.tech > summary::before { content: "+"; font-family: var(--mono); width: 1ch; }
   details.tech[open] > summary::before { content: "\2212"; }
   details.tech > summary:hover { color: var(--gold-hi); }
-  .tech-body { margin-top: 12px; font-family: var(--mono); font-size: 0.8rem; color: var(--dim); }
+  .tech-body { margin-top: 10px; font-family: var(--mono); font-size: 0.8rem; color: var(--dim); }
   .tech-body .row { display: flex; gap: 10px; padding: 5px 0; border-bottom: 1px solid var(--line); flex-wrap: wrap; }
   .tech-body .row .k { color: var(--faint); min-width: 13ch; }
   .tech-body .row .v { color: var(--text); word-break: break-word; }
@@ -446,10 +362,11 @@
     white-space: pre-wrap;
     word-break: break-word;
   }
-  .tech-cap { font-family: var(--body); font-size: 0.86rem; color: var(--dim); margin-top: 12px; }
+  .tech-cap { font-family: var(--body); font-size: 0.86rem; color: var(--dim); margin-top: 10px; }
 
   /* ---------- audit ---------- */
-  .audit-sub { color: var(--dim); margin: -6px 0 14px; }
+  .audit-panel { margin-top: 18px; animation: rise 0.5s 0.26s cubic-bezier(0.2, 0.8, 0.2, 1) both; }
+  .audit-sub { color: var(--dim); margin: -4px 0 12px; }
   .table-scroll { overflow-x: auto; }
   .audit-table { width: 100%; border-collapse: collapse; font-family: var(--mono); font-size: 0.8rem; min-width: 760px; }
   .audit-table th {
@@ -475,7 +392,7 @@
 
   /* ---------- footer ---------- */
   footer {
-    margin-top: 34px;
+    margin-top: 30px;
     padding-top: 16px;
     border-top: 1px solid var(--line);
     color: var(--faint);
@@ -487,15 +404,34 @@
   footer a { color: var(--dim); text-decoration: none; border-bottom: 1px solid var(--line-2); }
   footer a:hover { color: var(--text); }
 
+  /* ---------- narrow screens: examples become a swipe row above the prompt ---------- */
+  @media (max-width: 950px) {
+    .layout { grid-template-columns: 1fr; gap: 6px; }
+    .col-left .panel { padding: 10px 0 4px; background: none; border: none; }
+    .col-left .panel-title { padding: 0 2px; }
+    #examples-top { scroll-margin-top: 8px; }
+    .ex-list {
+      flex-direction: row;
+      overflow-x: auto;
+      gap: 7px;
+      padding-bottom: 6px;
+      scroll-snap-type: x proximity;
+      -webkit-overflow-scrolling: touch;
+    }
+    .ex, .ex-list.show-more .ex.extra, .ex.extra { display: block; width: auto; flex: none; white-space: nowrap; scroll-snap-align: start; }
+    .more-btn { display: none; }
+    .swipe-hint { display: inline; }
+  }
+  @media (max-width: 520px) {
+    .wrap { padding: 14px 16px 48px; }
+    .panel { padding: 16px 14px; }
+    .head-right { margin-left: 0; }
+    .v-word { font-size: 1.85rem; }
+  }
+
   @keyframes rise { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
   @media (prefers-reduced-motion: reduce) {
     *, *::before, *::after { animation: none !important; transition: none !important; }
-  }
-  @media (max-width: 520px) {
-    .wrap { padding: 20px 16px 48px; }
-    .panel { padding: 18px 16px; }
-    .head-right { margin-left: 0; }
-    .v-word { font-size: 2.1rem; }
   }
 </style>
 </head>
@@ -504,7 +440,7 @@
 
   <header>
     <div class="mark" aria-hidden="true">
-      <svg width="40" height="40" viewBox="0 0 32 32" fill="none">
+      <svg width="36" height="36" viewBox="0 0 32 32" fill="none">
         <path d="M8 5h16v13c0 5-4 8-8 9-4-1-8-4-8-9z" stroke="#c4a35a" stroke-width="2"/>
         <path d="M12 15h8M16 11v8" stroke="#c4a35a" stroke-width="2"/>
       </svg>
@@ -519,7 +455,7 @@
     </div>
   </header>
 
-  <div id="selftest-panel" role="region" aria-label="Engine self-test results" style="margin-top:18px;">
+  <div id="selftest-panel" role="region" aria-label="Engine self-test results">
     <div id="selftest-detail"></div>
     <p class="note">
       When this page loaded, it ran all 150 prompts from the project's two red-team test sets
@@ -534,66 +470,37 @@
   <section class="hero">
     <h2 class="headline">Stop sensitive data <em>before</em> it reaches the AI.</h2>
     <p class="lede">
-      Gatekeep sits between a team and the Claude API and checks every prompt on the way out.
-      <b>Secrets get blocked, personal data gets redacted, and hijack attempts get stopped.</b>
-      Every decision is logged without ever storing the prompt itself.
+      Gatekeep checks every prompt on its way to the Claude API. <b>Pick one, send it, and see what happens.</b> It all runs in your browser.
     </p>
-    <ol class="steps">
-      <li><span class="n">01</span><span><span class="t">Pick an example</span> <span class="d">or type your own prompt.</span></span></li>
-      <li><span class="n">02</span><span><span class="t">Gatekeep checks it</span> <span class="d">with the real detection engine.</span></span></li>
-      <li><span class="n">03</span><span><span class="t">See the decision</span> <span class="d">and exactly what the AI would receive.</span></span></li>
-    </ol>
-    <p class="local-note">Runs entirely in your browser. No API key, no server, nothing leaves this page.</p>
   </section>
 
   <div class="layout">
 
-    <!-- ============ left: try a prompt ============ -->
+    <!-- ============ left: example prompts ============ -->
     <section class="col-left">
       <div class="panel">
-        <div class="step-head ex-anchor" id="examples-top"><span class="k">01</span><h2>Try a prompt</h2><span class="rule"></span></div>
-
-        <div id="examples"></div>
-
-        <details class="more" id="more-examples">
-          <summary>More test cases</summary>
-          <div id="examples-more"></div>
-        </details>
-
-        <div class="or-rule">or write your own</div>
-
-        <label for="prompt" class="field-label">Prompt</label>
-        <div class="scanwrap" id="scanwrap">
-          <textarea id="prompt" spellcheck="false" autocomplete="off"
-            placeholder="Paste anything: a normal question, an API key, a card number, or an &quot;ignore your instructions&quot; trick."></textarea>
-        </div>
-        <div class="meta-line">
-          <span>Your app asked for <code id="req-model"></code></span>
-          <span id="charcount"></span>
-        </div>
-
-        <div class="send-row">
-          <button id="send">Check this prompt</button>
-          <span class="kbd-hint">or press <kbd>Ctrl</kbd> + <kbd>Enter</kbd></span>
-        </div>
-
-        <div class="mode" role="group" aria-labelledby="mode-label">
-          <span class="field-label" id="mode-label">When a hijack attempt is detected</span>
-          <div class="seg">
-            <button data-mode="enforce" id="mode-enforce" aria-pressed="true">Block it</button>
-            <button data-mode="shadow" id="mode-shadow" aria-pressed="false">Log it, let it through</button>
-          </div>
-          <p class="mode-note" id="mode-note"></p>
-        </div>
+        <div class="panel-title" id="examples-top"><h2>Try a prompt</h2><span class="rule"></span><span class="hint swipe-hint">swipe for more →</span></div>
+        <div class="ex-list" id="examples"></div>
+        <button class="more-btn" id="more-btn" type="button" aria-expanded="false">+ Show more prompts</button>
       </div>
     </section>
 
-    <!-- ============ right: decision ============ -->
+    <!-- ============ right: prompt + result, always together ============ -->
     <section class="col-right">
-      <div class="panel" id="decision-panel">
-        <div class="step-head"><span class="k">02</span><h2>The decision</h2><span class="rule"></span></div>
-        <div id="decision" aria-live="polite">
-          <div class="empty-state">Pick an example on the left to see what Gatekeep does with it.</div>
+      <div class="panel" id="work-panel">
+        <div class="panel-title"><h2>Your prompt</h2><span class="rule"></span></div>
+        <div class="scanwrap" id="scanwrap">
+          <textarea id="prompt" spellcheck="false" autocomplete="off" aria-label="Prompt"
+            placeholder="Pick one on the left, or write your own: a normal question, an API key, a card number, an &quot;ignore your instructions&quot; trick…"></textarea>
+        </div>
+
+        <div class="send-row">
+          <button id="send">Send it through Gatekeep</button>
+          <span class="kbd-hint"><kbd>Ctrl</kbd> + <kbd>Enter</kbd></span>
+        </div>
+
+        <div class="result" id="decision" aria-live="polite">
+          <div class="empty-state">Send a prompt to see what Gatekeep does with it.</div>
         </div>
       </div>
     </section>
@@ -601,7 +508,7 @@
 
   <!-- ============ audit ============ -->
   <section class="panel audit-panel">
-    <div class="step-head"><span class="k">03</span><h2>Audit log</h2><span class="rule"></span></div>
+    <div class="panel-title"><h2>Audit log</h2><span class="rule"></span></div>
     <p class="audit-sub">Every decision gets a row. The prompt text itself never does.</p>
     <div class="table-scroll">
       <table class="audit-table" id="audit-table" style="display:none;">
@@ -639,11 +546,11 @@
   const INJ_CORPUS = window.GatekeepInjectionCorpus;
   const REQUESTED_MODEL = "claude-sonnet-5";
   const REDUCED = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const NARROW = window.matchMedia("(max-width: 950px)");
   const THRESHOLD = G.POLICIES.injection.blockThreshold;
 
   const $ = (id) => document.getElementById(id);
   const ta = $("prompt");
-  $("req-model").textContent = REQUESTED_MODEL;
 
   /* ---------- plain-language names for detector output ---------- */
   const NAME = {
@@ -663,16 +570,10 @@
   const ATTEMPT = {
     instruction_override: "override the AI's instructions",
     role_manipulation: "hijack the AI's role",
-    system_prompt_leak: "reveal its hidden system prompt",
+    system_prompt_leak: "reveal its system prompt",
     delimiter_injection: "smuggle in fake system markup",
     exfiltration: "leak data through a hidden link",
   };
-  function injectionPhrase(dets) {
-    const techs = dets.filter((d) => d !== "obfuscation").map((d) => ATTEMPT[d] || d.replace(/_/g, " "));
-    let s = techs.length ? "an attempt to " + joinList(techs) : "a disguised hijack attempt";
-    if (dets.indexOf("obfuscation") !== -1 && techs.length) s += ", disguised with invisible or look-alike characters";
-    return s;
-  }
   const CAT = { secret: "Secret", pii: "Personal data", injection: "Hijack attempt" };
   const nameOf = (d) => NAME[d] || d.replace(/_/g, " ");
   const phraseOf = (d) => PHRASE[d] || d.replace(/_/g, " ");
@@ -681,113 +582,103 @@
     if (items.length <= 1) return items.join("");
     return items.slice(0, -1).join(", ") + " and " + items[items.length - 1];
   }
+  function injectionPhrase(dets) {
+    const techs = dets.filter((d) => d !== "obfuscation").map((d) => ATTEMPT[d] || d.replace(/_/g, " "));
+    let s = techs.length ? "an attempt to " + joinList(techs) : "a disguised hijack attempt";
+    if (dets.indexOf("obfuscation") !== -1 && techs.length) s += ", disguised with hidden or look-alike characters";
+    return s;
+  }
 
   /* ---------- injection mode (demo starts in enforce so blocks are visible;
      the product ships shadow-by-default, see policies.yaml) ---------- */
   let injectionMode = "enforce";
-
   function policiesForMode() {
     const p = JSON.parse(JSON.stringify(G.POLICIES));
     p.injection.mode = injectionMode;
     return p;
   }
-
-  function renderMode() {
-    $("mode-enforce").setAttribute("aria-pressed", String(injectionMode === "enforce"));
-    $("mode-shadow").setAttribute("aria-pressed", String(injectionMode === "shadow"));
-    $("mode-note").textContent = injectionMode === "enforce"
-      ? "Anything scoring " + THRESHOLD.toFixed(2) + " or higher on hijack risk is stopped. Gatekeep ships in log-only mode so a team can tune that line first. This demo starts in block mode so you can see it work."
-      : "How Gatekeep ships: hijack attempts are scored and recorded, but still sent. Switch back to Block it to see the same prompt stopped.";
+  function setMode(next) {
+    if (next === injectionMode) return;
+    injectionMode = next;
+    if (ta.value.trim() && auditRows.length) send({ quiet: true }); // re-run so the change is visible
+  }
+  function modeControl() {
+    const wrap = el("div", "mode");
+    wrap.setAttribute("role", "group");
+    wrap.setAttribute("aria-label", "What to do with hijack attempts");
+    wrap.appendChild(el("span", "lbl", "Hijack attempts:"));
+    const seg = el("div", "seg");
+    for (const [mode, label, tip] of [["enforce", "Block", "Stop prompts at or above the block line"],
+                                      ["shadow", "Log only", "Score and record them, but let them through (how Gatekeep ships)"]]) {
+      const b = el("button", null, label);
+      b.type = "button";
+      b.title = tip;
+      b.setAttribute("aria-pressed", String(injectionMode === mode));
+      b.addEventListener("click", () => setMode(mode));
+      seg.appendChild(b);
+    }
+    wrap.appendChild(seg);
+    return wrap;
   }
 
-  /* ---------- examples (indices into each corpus, 0-based) ---------- */
+  /* ---------- example prompts: labels describe the prompt, never the outcome.
+     Indices into each corpus, 0-based. Order is mixed on purpose. ---------- */
   const EXAMPLES = [
-    { group: "Secrets and keys", items: [
-      ["Leaked AWS key", CORPUS, 0], ["Random-looking secret", CORPUS, 12] ] },
-    { group: "Personal data", items: [
-      ["SSN and email", CORPUS, 29], ["Credit card number", CORPUS, 19] ] },
-    { group: "Hijack attempts", items: [
-      ["“Ignore all previous instructions”", INJ_CORPUS, 0],
-      ["Attack hidden in a document", INJ_CORPUS, 47],
-      ["Disguised with invisible characters", INJ_CORPUS, 42] ] },
-    { group: "Harmless, but easy to get wrong", items: [
-      ["Everyday request", CORPUS, 31],
-      ["“Developer mode”, innocently", INJ_CORPUS, 78],
-      ["Git commit hash", CORPUS, 34] ] },
+    ["Deploy note with an AWS key", CORPUS, 0],
+    ["Job candidate's SSN and email", CORPUS, 29],
+    ["“Ignore all previous instructions…”", INJ_CORPUS, 0],
+    ["Summarize a meeting agenda", CORPUS, 31],
+    ["Card number for a renewal", CORPUS, 19],
+    ["Document with a note to the AI", INJ_CORPUS, 47],
+    ["Chrome's developer mode", INJ_CORPUS, 78],
+    ["Signing secret in a config note", CORPUS, 12],
+    ["“Ignore…” with invisible characters", INJ_CORPUS, 42],
+    ["Git commit that broke the build", CORPUS, 34],
   ];
   const MORE = [
-    { group: "More secrets", items: [
-      ["GitHub token", CORPUS, 3], ["Login token (JWT)", CORPUS, 9] ] },
-    { group: "More hijack attempts", items: [
-      ["Role hijack (“You are now DAN”)", INJ_CORPUS, 12], ["Ask for the system prompt", INJ_CORPUS, 22],
-      ["Fake system markup", INJ_CORPUS, 29], ["Hidden data-leak image", INJ_CORPUS, 41],
-      ["Look-alike letters", INJ_CORPUS, 44] ] },
-    { group: "More traps that should pass", items: [
-      ["Invalid card number", CORPUS, 39], ["“Ignore any typos”", INJ_CORPUS, 52] ] },
+    ["Clone command with a GitHub token", CORPUS, 3],
+    ["“You are now DAN…”", INJ_CORPUS, 12],
+    ["Test card for a payment gateway", CORPUS, 39],
+    ["Ask for the system prompt", INJ_CORPUS, 22],
+    ["Session token (JWT)", CORPUS, 9],
+    ["“Please ignore any typos…”", INJ_CORPUS, 52],
+    ["Fake </system> tags", INJ_CORPUS, 29],
+    ["Markdown image with a tracking URL", INJ_CORPUS, 41],
+    ["“Ignore…” in look-alike letters", INJ_CORPUS, 44],
   ];
-  const DEFAULT_EXAMPLE = [CORPUS, 29];
+  const DEFAULT_EXAMPLE = 1; // job candidate's SSN and email
 
   const exButtons = [];
-  function predict(text) {
-    const pol = policiesForMode();
-    const findings = G.runAll(text.slice(0, G.SCAN_CAP), pol);
-    const d = G.decide([text], [findings], pol);
-    const flagged = d.action === "allow" && (d.injectionScore || 0) >= THRESHOLD;
-    return flagged ? "flag" : d.action;
+  function addExample(list, label, corpus, idx, extra) {
+    const b = document.createElement("button");
+    b.type = "button";
+    b.className = "ex" + (extra ? " extra" : "");
+    b.setAttribute("aria-pressed", "false");
+    b.textContent = label;
+    b.title = corpus[idx].text;
+    b._text = corpus[idx].text;
+    b.addEventListener("click", () => {
+      ta.value = b._text;
+      setActive(b);
+      updateSend();
+      send();
+    });
+    list.appendChild(b);
+    exButtons.push(b);
   }
-  const TAG = { block: "blocked", redact: "redacted", allow: "allowed", flag: "logged" };
+  const exList = $("examples");
+  for (const [l, c, i] of EXAMPLES) addExample(exList, l, c, i, false);
+  for (const [l, c, i] of MORE) addExample(exList, l, c, i, true);
 
-  function buildExamples(containerId, groups) {
-    const box = $(containerId);
-    for (const g of groups) {
-      const wrap = document.createElement("div");
-      wrap.className = "ex-group";
-      const h = document.createElement("div");
-      h.className = "ex-head";
-      h.textContent = g.group;
-      const list = document.createElement("div");
-      list.className = "ex-list";
-      for (const [label, corpus, idx] of g.items) {
-        const b = document.createElement("button");
-        b.type = "button";
-        b.className = "ex";
-        b.setAttribute("aria-pressed", "false");
-        b.title = corpus[idx].text;
-        const lab = document.createElement("span");
-        lab.textContent = label;
-        const tag = document.createElement("span");
-        tag.className = "tag";
-        b.append(lab, tag);
-        b._text = corpus[idx].text;
-        b._tag = tag;
-        b.addEventListener("click", () => {
-          ta.value = b._text;
-          setActive(b);
-          updateSend();
-          send();
-        });
-        list.appendChild(b);
-        exButtons.push(b);
-      }
-      wrap.append(h, list);
-      box.appendChild(wrap);
-    }
-  }
-
-  function refreshTags() {
-    for (const b of exButtons) {
-      const o = predict(b._text);
-      b._tag.className = "tag t-" + o;
-      b._tag.textContent = TAG[o];
-    }
-  }
+  $("more-btn").addEventListener("click", () => {
+    const open = exList.classList.toggle("show-more");
+    $("more-btn").setAttribute("aria-expanded", String(open));
+    $("more-btn").textContent = open ? "− Show fewer" : "+ Show more prompts";
+  });
 
   function setActive(btn) {
     for (const b of exButtons) b.setAttribute("aria-pressed", String(b === btn));
   }
-
-  buildExamples("examples", EXAMPLES);
-  buildExamples("examples-more", MORE);
 
   /* ---------- self-test: replay both corpora in-browser ---------- */
   function selfTest() {
@@ -909,11 +800,12 @@
     const score = r.decision.injectionScore || 0;
     const injDet = uniqueDetectors(r.findings, "injection");
     const dataDet = uniqueDetectors(r.findings).filter((d) => injDet.indexOf(d) === -1);
+    const hasSecret = r.findings.some((f) => f.category === "secret");
     const injBlocked = r.decision.matchedRules.indexOf("injection:block") !== -1;
     const flagged = action === "allow" && score >= THRESHOLD;
     const kind = flagged ? "flag" : action;
 
-    /* verdict card */
+    /* verdict */
     const card = el("div", "verdict v-" + kind + (REDUCED ? "" : " in"));
     const top = el("div", "v-top");
     top.innerHTML = ICON[kind];
@@ -925,18 +817,18 @@
     const injPhrase = injDet.length ? injectionPhrase(injDet) : "";
     if (action === "block") {
       lead = "Gatekeep stopped this prompt before it reached the AI.";
-      if (injBlocked && !dataDet.some((d) => r.findings.find((f) => f.detector === d && f.category === "secret"))) {
-        why = "It looks like " + injPhrase + ". Its risk score is " + score.toFixed(2) +
-          ", over the " + THRESHOLD.toFixed(2) + " block line.";
+      if (injBlocked && !hasSecret) {
+        why = "It looks like " + injPhrase + ".";
       } else {
-        why = "It contains " + dataPhrase + (injPhrase ? ", plus " + injPhrase : "") + ".";
+        why = "It contains " + dataPhrase + (injPhrase ? ", plus " + injPhrase : "") +
+          ". Credentials are never allowed through.";
       }
     } else if (action === "redact") {
       lead = "Gatekeep removed the sensitive parts, then sent the rest to the AI.";
       why = "It found " + dataPhrase + (injPhrase ? ", and logged " + injPhrase : "") + ".";
     } else if (flagged) {
       lead = "Sent to the AI, but recorded as a likely hijack attempt.";
-      why = "Its risk score is " + score.toFixed(2) + ", over the block line, but this checkpoint is in log-only mode. Switch to Block it to stop it.";
+      why = "It looks like " + injPhrase + ". Hijack attempts are set to Log only, so it went through anyway.";
     } else if (injDet.length) {
       lead = "Nothing worth stopping. The prompt went to the AI unchanged.";
       why = "A few hijack-like phrases scored " + score.toFixed(2) + ", below the " + THRESHOLD.toFixed(2) + " block line.";
@@ -953,9 +845,9 @@
     const mvHead = el("div", "sub-head");
     mvHead.appendChild(el("h3", null, "What the AI receives"));
     const aside = el("span", "aside");
-    if (action === "block") aside.textContent = "Sent to: nothing";
+    if (action === "block") aside.textContent = "your app gets an error instead";
     else {
-      aside.append("Sent to ");
+      aside.append("sent to ");
       aside.appendChild(el("code", null, r.modelRouted));
     }
     mvHead.appendChild(aside);
@@ -979,53 +871,55 @@
     mvSub.appendChild(mv);
     box.appendChild(mvSub);
 
-    /* what gatekeep found */
-    const fSub = el("div", "sub");
-    const fHead = el("div", "sub-head");
-    fHead.appendChild(el("h3", null, "What Gatekeep found"));
-    fSub.appendChild(fHead);
-    const ul = el("ul", "found");
-    const seen = new Set();
-    for (const f of r.findings) {
-      if (seen.has(f.detector)) continue;
-      seen.add(f.detector);
-      const li = el("li");
-      li.appendChild(el("span", "tag c-" + f.category, CAT[f.category] || f.category));
-      li.appendChild(el("span", "what", nameOf(f.detector)));
-      let then;
-      if (f.category === "secret") then = "blocked";
-      else if (f.category === "pii") then = action === "block" ? "blocked with the request" : "replaced before sending";
-      else then = injBlocked ? "blocked" : "scored and logged";
-      li.appendChild(el("span", "then", then));
-      ul.appendChild(li);
-    }
-    if (!seen.size) ul.appendChild(el("li", "none", "Nothing. The prompt is clean."));
-    fSub.appendChild(ul);
+    /* what gatekeep found (only when it found something) */
+    if (r.findings.length) {
+      const fSub = el("div", "sub");
+      const fHead = el("div", "sub-head");
+      fHead.appendChild(el("h3", null, "What Gatekeep found"));
+      fSub.appendChild(fHead);
+      const ul = el("ul", "found");
+      const seen = new Set();
+      for (const f of r.findings) {
+        if (seen.has(f.detector)) continue;
+        seen.add(f.detector);
+        const li = el("li");
+        li.appendChild(el("span", "tag c-" + f.category, CAT[f.category] || f.category));
+        li.appendChild(el("span", "what", nameOf(f.detector)));
+        let then;
+        if (f.category === "secret") then = "blocked";
+        else if (f.category === "pii") then = action === "block" ? "blocked with the request" : "replaced before sending";
+        else then = injBlocked ? "blocked" : "scored and logged";
+        li.appendChild(el("span", "then", then));
+        ul.appendChild(li);
+      }
+      fSub.appendChild(ul);
 
-    if (injDet.length) {
-      const mb = el("div", "meter-box");
-      const scale = el("div", "meter-scale");
-      const left = el("span");
-      left.append("Hijack risk ");
-      left.appendChild(el("b", null, score.toFixed(2)));
-      scale.appendChild(left);
-      scale.appendChild(el("span", null, "block line " + THRESHOLD.toFixed(2)));
-      mb.appendChild(scale);
-      const meter = el("div", "meter");
-      const fill = el("div", "fill");
-      fill.style.width = Math.min(100, score * 100).toFixed(0) + "%";
-      const tick = el("div", "tick");
-      tick.style.left = (THRESHOLD * 100).toFixed(0) + "%";
-      meter.append(fill, tick);
-      mb.appendChild(meter);
-      mb.appendChild(el("p", "meter-note", injBlocked
-        ? "Over the line in block mode, so the request was stopped."
-        : score >= THRESHOLD
-          ? "Over the line, but log-only mode records it and lets it through."
-          : "Under the line, so it is logged and allowed in either mode."));
-      fSub.appendChild(mb);
+      if (injDet.length) {
+        const mb = el("div", "meter-box");
+        const scale = el("div", "meter-scale");
+        const left = el("span");
+        left.append("Hijack risk ");
+        left.appendChild(el("b", null, score.toFixed(2)));
+        scale.appendChild(left);
+        scale.appendChild(el("span", null, "block line " + THRESHOLD.toFixed(2)));
+        mb.appendChild(scale);
+        const meter = el("div", "meter");
+        const fill = el("div", "fill");
+        fill.style.width = Math.min(100, score * 100).toFixed(0) + "%";
+        const tick = el("div", "tick");
+        tick.style.left = (THRESHOLD * 100).toFixed(0) + "%";
+        meter.append(fill, tick);
+        mb.appendChild(meter);
+        mb.appendChild(el("p", "meter-note", injBlocked
+          ? "Gatekeep ships set to Log only, so a team can tune this line on real traffic before anything gets blocked. Try Log only to compare."
+          : score >= THRESHOLD
+            ? "Over the line. Switch to Block to stop it."
+            : "Under the line, so it is logged and allowed either way."));
+        mb.appendChild(modeControl());
+        fSub.appendChild(mb);
+      }
+      box.appendChild(fSub);
     }
-    box.appendChild(fSub);
 
     /* technical details */
     const det = el("details", "tech");
@@ -1035,6 +929,7 @@
     kv("response", action === "block" ? "HTTP 403 to the calling app" : "HTTP 200, forwarded upstream");
     kv("policy rule", [...new Set(r.decision.matchedRules)].join(" · ") || "default_action: allow");
     kv("injection mode", r.mode === "enforce" ? "enforce (block at " + THRESHOLD.toFixed(2) + ")" : "shadow (log and allow)");
+    kv("model requested", REQUESTED_MODEL);
     kv("model routed", r.modelRouted === null ? "none" : r.modelRouted + (action === "redact" ? "  (policies.yaml routes redacted traffic to a cheaper model)" : ""));
     kv("decision time", (r.latencyMs < 0.05 ? "under 0.1" : r.latencyMs.toFixed(2)) + " ms, in this tab");
     if (action === "block") {
@@ -1058,18 +953,6 @@
     }
     det.appendChild(body);
     box.appendChild(det);
-
-    const again = el("button", "try-another", "↑ Try another example");
-    again.type = "button";
-    again.addEventListener("click", () => $("examples-top").scrollIntoView({ behavior: REDUCED ? "auto" : "smooth", block: "start" }));
-    box.appendChild(again);
-  }
-
-  // Single-column layouts put the decision below the fold: bring it into view after a run.
-  const NARROW = window.matchMedia("(max-width: 950px)");
-  function revealDecision() {
-    if (!NARROW.matches) return;
-    $("decision-panel").scrollIntoView({ behavior: REDUCED ? "auto" : "smooth", block: "start" });
   }
 
   function renderAudit() {
@@ -1096,6 +979,15 @@
     });
   }
 
+  /* On narrow screens the examples sit in a swipe row right above the prompt:
+     after a run, line that row up with the top of the screen so the examples,
+     the prompt, and the result are all visible together. */
+  function keepInView() {
+    if (!NARROW.matches) return;
+    const top = $("examples-top").getBoundingClientRect().top;
+    if (Math.abs(top - 8) > 4) $("examples-top").scrollIntoView({ behavior: REDUCED ? "auto" : "smooth", block: "start" });
+  }
+
   /* ---------- send flow ---------- */
   let busy = false;
   function send(opts) {
@@ -1109,7 +1001,7 @@
       renderDecision(r);
       renderAudit();
       busy = false;
-      if (!(opts && opts.quiet)) revealDecision();
+      if (!(opts && opts.quiet)) keepInView();
     };
     if (REDUCED) { go(); return; }
     wrap.classList.remove("scanning");
@@ -1120,33 +1012,20 @@
 
   function updateSend() {
     $("send").disabled = !ta.value.trim();
-    $("charcount").textContent = ta.value.length ? ta.value.length + " characters" : "";
   }
 
-  for (const id of ["mode-enforce", "mode-shadow"]) {
-    $(id).addEventListener("click", (e) => {
-      const next = e.currentTarget.dataset.mode;
-      if (next === injectionMode) return;
-      injectionMode = next;
-      renderMode();
-      refreshTags();
-      if (ta.value.trim() && auditRows.length) send(); // re-run so the mode change is visible
-    });
-  }
-
-  $("send").addEventListener("click", () => send());
+  $("send").addEventListener("click", () => send({ quiet: true }));
   ta.addEventListener("input", () => { setActive(null); updateSend(); });
   ta.addEventListener("keydown", (e) => {
-    if ((e.ctrlKey || e.metaKey) && e.key === "Enter") { e.preventDefault(); send(); }
+    if ((e.ctrlKey || e.metaKey) && e.key === "Enter") { e.preventDefault(); send({ quiet: true }); }
   });
 
-  renderMode();
-  refreshTags();
   selfTest();
 
   // Open on a real example so the page never starts empty.
-  ta.value = DEFAULT_EXAMPLE[0][DEFAULT_EXAMPLE[1]].text;
-  setActive(exButtons.find((b) => b._text === ta.value) || null);
+  const first = exButtons[DEFAULT_EXAMPLE];
+  ta.value = first._text;
+  setActive(first);
   updateSend();
   send({ quiet: true });
 })();
