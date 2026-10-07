@@ -3,59 +3,63 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Gatekeep · prompt firewall — live demo</title>
-<meta name="description" content="Type a prompt, watch it hit the checkpoint. Gatekeep blocks secrets, redacts PII, screens for prompt injection, and audit-logs every decision. Runs entirely in your browser.">
+<title>Gatekeep · prompt firewall live demo</title>
+<meta name="description" content="Pick a prompt and watch it hit the checkpoint. Gatekeep blocks secrets, redacts personal data, stops prompt-injection attempts, and audit-logs every decision. Runs entirely in your browser.">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' fill='%230b0b0f'/%3E%3Cpath d='M8 5h16v13c0 5-4 8-8 9-4-1-8-4-8-9z' fill='none' stroke='%23c4a35a' stroke-width='2.5'/%3E%3Cpath d='M12 15h8M16 11v8' stroke='%23c4a35a' stroke-width='2.5'/%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Cormorant:ital,wght@0,300;0,400;0,500;1,300;1,400;1,500&family=JetBrains+Mono:wght@300;400;500&family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant:ital,wght@0,300;0,400;0,500;1,300;1,400;1,500&family=JetBrains+Mono:wght@400;500&family=Outfit:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
   :root {
     --bg: #0b0b0f;
-    --panel: #111118;
-    --panel-2: #0d0d13;
-    --line: rgba(196, 163, 90, 0.12);
-    --line-2: rgba(196, 163, 90, 0.3);
-    --text: #e5e1d6;
-    --dim: #8e8880;
-    --faint: #6b655a;
-    --steel: #c4a35a;
-    --block: #e05e5e;
-    --redact: #e0a83c;
-    --allow: #5cb17c;
-    --inject: #a08ce0;
+    --panel: #121219;
+    --panel-2: #0e0e14;
+    --raise: #191921;
+    --line: rgba(196, 163, 90, 0.16);
+    --line-2: rgba(196, 163, 90, 0.34);
+    --text: #ece8de;
+    --dim: #b3ada2;
+    --faint: #918b80;
+    --gold: #c4a35a;
+    --gold-hi: #d8b96d;
+    --block: #ef6f6f;
+    --redact: #e8b04a;
+    --allow: #6cc58f;
+    --inject: #b6a6f2;
     --display: "Cormorant", Georgia, serif;
     --mono: "JetBrains Mono", "Cascadia Code", Consolas, monospace;
     --body: "Outfit", "Segoe UI", sans-serif;
   }
 
   * { margin: 0; padding: 0; box-sizing: border-box; }
-
   html { color-scheme: dark; }
 
   body {
-    font-family: var(--mono);
-    font-size: 14px;
-    line-height: 1.55;
+    font-family: var(--body);
+    font-weight: 400;
+    font-size: 15.5px;
+    line-height: 1.6;
     color: var(--text);
     background:
-      radial-gradient(1100px 500px at 70% -10%, rgba(196, 163, 90, 0.05), transparent 60%),
+      radial-gradient(1100px 520px at 72% -12%, rgba(196, 163, 90, 0.07), transparent 60%),
       var(--bg);
     min-height: 100vh;
   }
 
-  /* film grain */
   body::after {
     content: "";
     position: fixed;
     inset: 0;
     pointer-events: none;
     z-index: 999;
-    opacity: 0.05;
+    opacity: 0.035;
     background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23n)'/%3E%3C/svg%3E");
   }
 
-  .wrap { max-width: 1180px; margin: 0 auto; padding: 26px 22px 60px; }
+  button, textarea { font: inherit; color: inherit; }
+  :focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
+
+  .wrap { max-width: 1180px; margin: 0 auto; padding: 26px 24px 64px; }
 
   /* ---------- header ---------- */
   header {
@@ -67,38 +71,31 @@
     border-bottom: 1px solid var(--line);
     animation: rise 0.5s 0.02s cubic-bezier(0.2, 0.8, 0.2, 1) both;
   }
-
   .mark { display: flex; align-items: center; gap: 12px; }
   .mark svg { display: block; }
-
   .wordmark {
     font-family: var(--display);
-    font-weight: 300;
+    font-weight: 400;
     font-size: 2.3rem;
-    letter-spacing: 0.01em;
     line-height: 0.95;
   }
-  .wordmark em { font-style: italic; color: var(--steel); }
+  .wordmark em { font-style: italic; color: var(--gold); }
   .wordmark small {
     display: block;
     font-family: var(--mono);
-    font-weight: 400;
-    font-size: 0.62rem;
-    letter-spacing: 0.26em;
+    font-size: 0.66rem;
+    letter-spacing: 0.22em;
     color: var(--dim);
-    margin-top: 7px;
+    margin-top: 8px;
   }
-
   .head-right { margin-left: auto; display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
-
-  .chip-btn, .repo-link {
-    font-family: var(--mono);
-    font-size: 0.74rem;
-    letter-spacing: 0.06em;
+  .head-btn {
+    font-size: 0.84rem;
+    font-weight: 500;
     color: var(--dim);
     background: var(--panel-2);
-    border: 1px solid var(--line);
-    padding: 7px 12px;
+    border: 1px solid var(--line-2);
+    padding: 7px 13px;
     cursor: pointer;
     text-decoration: none;
     display: inline-flex;
@@ -106,98 +103,185 @@
     gap: 8px;
     transition: border-color 0.15s, color 0.15s;
   }
-  .chip-btn:hover, .repo-link:hover { border-color: var(--line-2); color: var(--text); }
-
+  .head-btn:hover { border-color: var(--gold); color: var(--text); }
   .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--faint); flex: none; }
-  .dot.pass { background: var(--allow); box-shadow: 0 0 8px rgba(92, 177, 124, 0.8); }
-  .dot.fail { background: var(--block); box-shadow: 0 0 8px rgba(224, 94, 94, 0.8); }
+  .dot.pass { background: var(--allow); box-shadow: 0 0 8px rgba(108, 197, 143, 0.7); }
+  .dot.fail { background: var(--block); box-shadow: 0 0 8px rgba(239, 111, 111, 0.7); }
 
-  .intro {
-    font-family: var(--body);
-    font-weight: 300;
-    font-size: 0.98rem;
-    line-height: 1.8;
-    color: var(--dim);
-    max-width: 74ch;
-    margin: 16px 0 22px;
+  /* ---------- hero ---------- */
+  .hero {
+    padding: 34px 0 26px;
     animation: rise 0.5s 0.08s cubic-bezier(0.2, 0.8, 0.2, 1) both;
   }
-  .intro b { color: var(--text); font-weight: 500; }
+  .headline {
+    font-family: var(--display);
+    font-weight: 400;
+    font-size: clamp(2.1rem, 4.2vw, 3.2rem);
+    line-height: 1.05;
+    letter-spacing: -0.01em;
+    max-width: 20ch;
+  }
+  .headline em { font-style: italic; color: var(--gold); }
+  .lede {
+    margin-top: 14px;
+    font-size: 1.06rem;
+    line-height: 1.7;
+    color: var(--dim);
+    max-width: 62ch;
+  }
+  .lede b { color: var(--text); font-weight: 500; }
 
-  /* ---------- self-test strip ---------- */
+  .steps {
+    list-style: none;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    margin-top: 24px;
+    border-top: 1px solid var(--line);
+    border-bottom: 1px solid var(--line);
+  }
+  .steps li { padding: 14px 18px 14px 0; display: flex; gap: 12px; align-items: baseline; }
+  .steps li + li { padding-left: 18px; border-left: 1px solid var(--line); }
+  .steps .n { font-family: var(--mono); font-size: 0.78rem; color: var(--gold); flex: none; }
+  .steps .t { color: var(--text); font-weight: 500; }
+  .steps .d { color: var(--dim); font-size: 0.92rem; }
+  .local-note { margin-top: 12px; color: var(--faint); font-size: 0.86rem; }
+  @media (max-width: 760px) {
+    .steps { grid-template-columns: 1fr; }
+    .steps li + li { padding-left: 0; border-left: none; border-top: 1px solid var(--line); }
+  }
+
+  /* ---------- self-test panel ---------- */
   #selftest-panel {
     display: none;
-    border: 1px solid var(--line);
+    border: 1px solid var(--line-2);
     background: var(--panel-2);
     padding: 16px 18px;
     margin: 0 0 22px;
   }
   #selftest-panel.open { display: block; animation: rise 0.3s ease both; }
-  #selftest-panel table { border-collapse: collapse; margin: 10px 0 12px; }
+  #selftest-panel table { border-collapse: collapse; margin: 4px 0 12px; font-family: var(--mono); }
   #selftest-panel th, #selftest-panel td {
     text-align: right;
-    padding: 4px 18px 4px 0;
+    padding: 5px 20px 5px 0;
     font-size: 0.82rem;
-    border-bottom: 1px dashed var(--line);
+    border-bottom: 1px solid var(--line);
   }
   #selftest-panel th { color: var(--faint); font-weight: 400; }
+  #selftest-panel td { color: var(--text); }
   #selftest-panel td:first-child, #selftest-panel th:first-child { text-align: left; }
-  #selftest-panel .note { font-family: var(--body); font-weight: 300; color: var(--dim); font-size: 0.86rem; line-height: 1.7; max-width: 80ch; }
-  #selftest-panel .note code { font-family: var(--mono); font-size: 0.78rem; }
+  #selftest-panel .summary { font-family: var(--mono); font-size: 0.8rem; color: var(--dim); }
+  #selftest-panel .note { color: var(--dim); font-size: 0.92rem; line-height: 1.7; max-width: 80ch; margin-top: 10px; }
 
   /* ---------- layout ---------- */
   .layout {
     display: grid;
     grid-template-columns: minmax(340px, 5fr) 7fr;
-    gap: 16px;
+    gap: 18px;
     align-items: start;
   }
   @media (max-width: 950px) { .layout { grid-template-columns: 1fr; } }
-
-  .panel {
-    background: var(--panel);
-    border: 1px solid var(--line);
-    padding: 18px;
+  @media (min-width: 951px) { .col-right { position: sticky; top: 16px; } }
+  #decision-panel { scroll-margin-top: 12px; }
+  .ex-anchor { scroll-margin-top: 12px; }
+  .try-another {
+    display: none;
+    margin-top: 18px;
+    background: transparent;
+    border: 1px solid var(--line-2);
+    color: var(--gold);
+    font-weight: 500;
+    font-size: 0.9rem;
+    padding: 9px 14px;
+    cursor: pointer;
   }
-  .panel + .panel { margin-top: 16px; }
+  @media (max-width: 950px) { .try-another { display: inline-block; } }
+  @media (pointer: coarse) { .kbd-hint { display: none; } }
 
+  .panel { background: var(--panel); border: 1px solid var(--line); padding: 22px; }
   .col-left { animation: rise 0.5s 0.14s cubic-bezier(0.2, 0.8, 0.2, 1) both; }
   .col-right { animation: rise 0.5s 0.2s cubic-bezier(0.2, 0.8, 0.2, 1) both; }
-  .audit-panel { margin-top: 16px; animation: rise 0.5s 0.26s cubic-bezier(0.2, 0.8, 0.2, 1) both; }
+  .audit-panel { margin-top: 18px; animation: rise 0.5s 0.26s cubic-bezier(0.2, 0.8, 0.2, 1) both; }
 
-  .sec-label {
-    font-family: var(--mono);
-    font-weight: 400;
-    font-size: 0.66rem;
-    text-transform: uppercase;
-    letter-spacing: 0.24em;
-    color: var(--steel);
+  .step-head { display: flex; align-items: baseline; gap: 12px; margin-bottom: 16px; }
+  .step-head .k { font-family: var(--mono); font-size: 0.74rem; color: var(--gold); letter-spacing: 0.08em; }
+  .step-head h2 { font-size: 1.18rem; font-weight: 600; letter-spacing: 0.005em; }
+  .step-head .rule { flex: 1; border-top: 1px solid var(--line); align-self: center; }
+
+  .field-label { display: block; font-size: 0.86rem; font-weight: 600; color: var(--dim); margin-bottom: 8px; }
+
+  /* ---------- examples ---------- */
+  .ex-group + .ex-group { margin-top: 14px; }
+  .ex-head { font-size: 0.8rem; font-weight: 500; color: var(--faint); margin-bottom: 7px; }
+  .ex-list { display: flex; flex-direction: column; gap: 6px; }
+  .ex {
     display: flex;
-    align-items: baseline;
-    gap: 10px;
-    margin-bottom: 14px;
+    width: 100%;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    font-size: 0.9rem;
+    font-weight: 500;
+    color: var(--text);
+    background: var(--panel-2);
+    border: 1px solid var(--line-2);
+    padding: 7px 10px 7px 12px;
+    cursor: pointer;
+    text-align: left;
+    transition: border-color 0.12s, background 0.12s;
   }
-  .sec-label .no { color: var(--faint); font-weight: 400; letter-spacing: 0.1em; }
-  .sec-label .rule { flex: 1; border-top: 1px solid var(--line); align-self: center; }
+  .ex:hover { border-color: var(--gold); background: var(--raise); }
+  .ex[aria-pressed="true"] { border-color: var(--gold); background: rgba(196, 163, 90, 0.12); box-shadow: inset 0 0 0 1px var(--gold); }
+  .tag {
+    font-family: var(--mono);
+    font-size: 0.66rem;
+    font-weight: 500;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    padding: 2px 6px;
+    border: 1px solid currentColor;
+    white-space: nowrap;
+  }
+  .t-block { color: var(--block); }
+  .t-redact { color: var(--redact); }
+  .t-allow { color: var(--allow); }
+  .t-flag { color: var(--inject); }
 
-  /* ---------- request panel ---------- */
+  details.more { margin-top: 14px; }
+  details.more > summary {
+    cursor: pointer;
+    list-style: none;
+    font-size: 0.86rem;
+    font-weight: 500;
+    color: var(--gold);
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+  }
+  details.more > summary::-webkit-details-marker { display: none; }
+  details.more > summary::before { content: "+"; font-family: var(--mono); width: 1ch; }
+  details.more[open] > summary::before { content: "\2212"; }
+  details.more > summary:hover { color: var(--gold-hi); }
+  details.more .ex-group:first-of-type { margin-top: 12px; }
+
+  /* ---------- prompt box ---------- */
+  .or-rule { display: flex; align-items: center; gap: 12px; color: var(--faint); font-size: 0.82rem; margin: 20px 0 12px; }
+  .or-rule::before, .or-rule::after { content: ""; flex: 1; border-top: 1px solid var(--line); }
   .scanwrap { position: relative; overflow: hidden; }
   textarea {
     width: 100%;
-    min-height: 128px;
+    min-height: 116px;
     resize: vertical;
     background: var(--panel-2);
-    color: var(--text);
     border: 1px solid var(--line-2);
     font-family: var(--mono);
-    font-size: 0.88rem;
+    font-size: 0.9rem;
     line-height: 1.6;
-    padding: 12px;
+    padding: 12px 13px;
     display: block;
+    color: var(--text);
   }
-  textarea:focus-visible { outline: 1px solid var(--steel); outline-offset: 1px; }
+  textarea:focus-visible { outline: 2px solid var(--gold); outline-offset: 0; }
   textarea::placeholder { color: var(--faint); }
-
   .scanwrap.scanning::after {
     content: "";
     position: absolute;
@@ -208,251 +292,186 @@
     animation: sweep 0.38s linear both;
   }
   @keyframes sweep { to { transform: translateY(100%); } }
+  .meta-line { display: flex; justify-content: space-between; gap: 10px; color: var(--faint); font-size: 0.8rem; margin-top: 7px; }
+  .meta-line code { font-family: var(--mono); font-size: 0.78rem; color: var(--dim); }
 
-  .meta-line {
-    display: flex;
-    justify-content: space-between;
-    gap: 10px;
-    color: var(--faint);
-    font-size: 0.72rem;
-    margin-top: 8px;
-  }
-
-  .chips { display: flex; flex-wrap: wrap; gap: 7px; margin: 14px 0 16px; }
-  .chips-title { flex-basis: 100%; color: var(--faint); font-size: 0.72rem; letter-spacing: 0.14em; }
-  .chip {
-    font-family: var(--mono);
-    font-size: 0.74rem;
-    color: var(--dim);
-    background: transparent;
-    border: 1px solid var(--line-2);
-    padding: 5px 10px;
-    cursor: pointer;
-    transition: all 0.12s;
-  }
-  .chip:hover { color: var(--bg); background: var(--text); border-color: var(--text); }
-  .chip .cat { color: var(--faint); }
-  .chip:hover .cat { color: var(--bg); }
-
-  /* ---------- injection mode toggle ---------- */
-  .mode-row { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; margin: 0 0 16px; }
-  .mode-row .chips-title { flex-basis: auto; margin-right: 4px; }
-  .mode-btn {
-    font-family: var(--mono);
-    font-size: 0.72rem;
-    letter-spacing: 0.08em;
-    color: var(--dim);
-    background: transparent;
-    border: 1px solid var(--line-2);
-    padding: 5px 12px;
-    cursor: pointer;
-    transition: all 0.12s;
-  }
-  .mode-btn:hover { color: var(--text); border-color: var(--line-2); }
-  .mode-btn.active { color: var(--bg); background: var(--steel); border-color: var(--steel); font-weight: 500; }
-  .mode-note { flex-basis: 100%; color: var(--faint); font-family: var(--body); font-weight: 300; font-size: 0.78rem; }
-
-  .send-row { display: flex; align-items: center; gap: 14px; }
+  .send-row { display: flex; align-items: center; flex-wrap: wrap; gap: 14px; margin-top: 16px; }
   #send {
-    font-family: var(--mono);
-    font-weight: 500;
-    font-size: 0.68rem;
-    text-transform: uppercase;
-    letter-spacing: 0.2em;
-    color: var(--steel);
-    background: transparent;
-    border: 1px solid rgba(196, 163, 90, 0.45);
-    padding: 13px 24px;
-    cursor: pointer;
-    transition: background 0.15s, color 0.15s, transform 0.06s;
-  }
-  #send:hover { background: var(--steel); color: var(--bg); }
-  #send:active { transform: translateY(1px); }
-  #send:disabled { background: transparent; border-color: var(--line); color: var(--faint); cursor: not-allowed; }
-  .kbd-hint { color: var(--faint); font-size: 0.72rem; }
-
-  /* ---------- decision panel ---------- */
-  .empty-state {
-    border: 1px dashed var(--line-2);
-    color: var(--faint);
-    padding: 34px 20px;
-    text-align: center;
-    font-size: 0.85rem;
-  }
-
-  .verdict-row { display: flex; align-items: center; gap: 22px; flex-wrap: wrap; margin-bottom: 16px; }
-
-  .stamp {
-    font-family: var(--mono);
-    font-weight: 500;
-    font-size: clamp(1.8rem, 3.2vw, 2.6rem);
-    line-height: 1;
-    letter-spacing: 0.22em;
-    padding: 0.18em 0.5em 0.18em 0.7em;
-    border: 3px solid currentColor;
-    outline: 1px solid currentColor;
-    outline-offset: 3px;
-    transform: rotate(-3deg);
-    text-shadow: 0 0 18px currentColor;
-    flex: none;
-  }
-  .stamp.in { animation: stampIn 0.26s cubic-bezier(0.2, 1.4, 0.4, 1) both; }
-  @keyframes stampIn {
-    from { transform: rotate(-3deg) scale(1.8); opacity: 0; }
-    to   { transform: rotate(-3deg) scale(1);   opacity: 1; }
-  }
-
-  .v-block  { color: var(--block); }
-  .v-redact { color: var(--redact); }
-  .v-allow  { color: var(--allow); }
-
-  .verdict-detail { flex: 1; min-width: 240px; font-size: 0.84rem; color: var(--dim); }
-  .verdict-detail .lead { color: var(--text); }
-  .verdict-detail .latency { color: var(--faint); font-size: 0.76rem; margin-top: 4px; }
-
-  .errbody {
-    background: var(--panel-2);
-    border: 1px solid rgba(224, 94, 94, 0.3);
-    color: var(--dim);
-    font-size: 0.76rem;
-    padding: 10px 12px;
-    margin-top: 10px;
-    white-space: pre-wrap;
-    word-break: break-word;
-  }
-
-  .findings-title { color: var(--faint); font-size: 0.72rem; letter-spacing: 0.14em; margin: 14px 0 8px; }
-  .findings { list-style: none; display: flex; flex-direction: column; gap: 6px; }
-  .findings li {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    flex-wrap: wrap;
-    font-size: 0.8rem;
-    border: 1px solid var(--line);
-    background: var(--panel-2);
-    padding: 7px 10px;
-  }
-  .badge {
-    font-size: 0.68rem;
     font-weight: 600;
-    letter-spacing: 0.12em;
-    padding: 2px 8px;
-    border: 1px solid currentColor;
-    flex: none;
+    font-size: 0.95rem;
+    color: var(--bg);
+    background: var(--gold);
+    border: 1px solid var(--gold);
+    padding: 11px 22px;
+    cursor: pointer;
+    transition: background 0.15s, transform 0.06s;
   }
-  .badge.secret { color: var(--block); }
-  .badge.pii { color: var(--redact); }
-  .badge.injection { color: var(--inject); }
-  .findings .det { color: var(--text); font-weight: 500; }
-  .findings .span { color: var(--faint); }
-  .findings .preview { color: var(--dim); margin-left: auto; }
-  .findings .none { color: var(--faint); border-style: dashed; display: block; }
+  #send:hover { background: var(--gold-hi); }
+  #send:active { transform: translateY(1px); }
+  #send:disabled { background: transparent; border-color: var(--line-2); color: var(--faint); cursor: not-allowed; }
+  .kbd-hint { color: var(--faint); font-size: 0.82rem; }
+  .kbd-hint kbd { font-family: var(--mono); font-size: 0.76rem; color: var(--dim); border: 1px solid var(--line-2); padding: 1px 5px; }
 
-  .rule-line { color: var(--faint); font-size: 0.76rem; margin-top: 10px; }
-  .rule-line code { color: var(--dim); }
+  /* ---------- mode switch ---------- */
+  .mode { margin-top: 20px; padding-top: 16px; border-top: 1px solid var(--line); }
+  .mode .field-label { margin-bottom: 9px; }
+  .seg { display: inline-flex; border: 1px solid var(--line-2); }
+  .seg button {
+    background: transparent;
+    border: none;
+    padding: 7px 14px;
+    font-size: 0.88rem;
+    font-weight: 500;
+    color: var(--dim);
+    cursor: pointer;
+  }
+  .seg button + button { border-left: 1px solid var(--line-2); }
+  .seg button:hover { color: var(--text); }
+  .seg button[aria-pressed="true"] { background: var(--gold); color: var(--bg); font-weight: 600; }
+  .mode-note { color: var(--faint); font-size: 0.86rem; line-height: 1.6; margin-top: 9px; }
 
-  /* ---------- injection screen ---------- */
-  .inj-screen {
-    border: 1px solid rgba(160, 140, 224, 0.3);
-    background: var(--panel-2);
-    padding: 12px 14px;
-    margin-top: 14px;
-  }
-  .inj-screen .inj-title {
-    color: var(--inject);
-    font-size: 0.68rem;
-    letter-spacing: 0.2em;
-    margin-bottom: 10px;
-  }
-  .inj-meter {
-    position: relative;
-    height: 8px;
-    background: var(--panel);
+  /* ---------- decision ---------- */
+  .empty-state { border: 1px dashed var(--line-2); color: var(--dim); padding: 34px 20px; text-align: center; }
+
+  .verdict {
+    --vc: var(--allow);
+    --vbg: rgba(108, 197, 143, 0.07);
     border: 1px solid var(--line);
-    margin: 6px 0 4px;
+    border-left: 3px solid var(--vc);
+    background: var(--vbg);
+    padding: 16px 20px 18px;
   }
-  .inj-meter .fill {
-    position: absolute;
-    inset: 0 auto 0 0;
-    background: linear-gradient(90deg, rgba(160, 140, 224, 0.35), var(--inject));
-    transition: width 0.35s cubic-bezier(0.2, 0.8, 0.2, 1);
-  }
-  .inj-meter .tick {
-    position: absolute;
-    top: -4px;
-    bottom: -4px;
-    width: 1px;
-    background: var(--block);
-  }
-  .inj-scale { display: flex; justify-content: space-between; color: var(--faint); font-size: 0.66rem; }
-  .inj-outcome { color: var(--dim); font-size: 0.78rem; margin-top: 8px; }
-  .inj-outcome b { color: var(--text); font-weight: 500; }
-  .inj-outcome .would { color: var(--redact); }
+  .verdict.v-block  { --vc: var(--block);  --vbg: rgba(239, 111, 111, 0.08); }
+  .verdict.v-redact { --vc: var(--redact); --vbg: rgba(232, 176, 74, 0.08); }
+  .verdict.v-flag   { --vc: var(--inject); --vbg: rgba(182, 166, 242, 0.08); }
+  .verdict.in { animation: pop 0.28s cubic-bezier(0.2, 1.3, 0.4, 1) both; }
+  @keyframes pop { from { opacity: 0; transform: translateY(6px) scale(0.985); } to { opacity: 1; transform: none; } }
+  .v-top { display: flex; align-items: center; gap: 10px; color: var(--vc); }
+  .v-top svg { flex: none; }
+  .v-word { font-family: var(--display); font-style: italic; font-weight: 500; font-size: 2.5rem; line-height: 1; }
+  .v-lead { margin-top: 10px; font-size: 1.04rem; color: var(--text); }
+  .v-why { margin-top: 4px; color: var(--dim); }
 
-  /* ---------- model view ---------- */
+  .sub { margin-top: 20px; }
+  .sub-head { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; flex-wrap: wrap; margin-bottom: 8px; }
+  .sub-head h3 { font-size: 0.95rem; font-weight: 600; color: var(--text); }
+  .sub-head .aside { font-size: 0.82rem; color: var(--faint); }
+  .sub-head .aside code { font-family: var(--mono); font-size: 0.78rem; color: var(--dim); }
+
   .modelview {
     background: var(--panel-2);
     border: 1px solid var(--line-2);
     padding: 14px;
-    font-size: 0.88rem;
-    line-height: 1.7;
-    min-height: 66px;
+    font-family: var(--mono);
+    font-size: 0.92rem;
+    line-height: 1.75;
+    min-height: 60px;
     word-break: break-word;
+    color: var(--text);
   }
   .modelview.blocked {
-    background: repeating-linear-gradient(-45deg, rgba(224, 94, 94, 0.06) 0 10px, transparent 10px 20px), var(--panel-2);
-    border-color: rgba(224, 94, 94, 0.35);
+    background: repeating-linear-gradient(-45deg, rgba(239, 111, 111, 0.07) 0 10px, transparent 10px 20px), var(--panel-2);
+    border-color: rgba(239, 111, 111, 0.4);
     color: var(--dim);
+    font-family: var(--body);
+    font-size: 0.95rem;
     text-align: center;
     display: flex;
     align-items: center;
     justify-content: center;
-    letter-spacing: 0.08em;
-    font-size: 0.8rem;
   }
-  .modelview.idle { color: var(--faint); border-style: dashed; }
   mark.redaction {
-    background: #181206;
+    background: rgba(232, 176, 74, 0.14);
     color: var(--redact);
-    border: 1px solid rgba(224, 168, 60, 0.55);
+    border: 1px solid rgba(232, 176, 74, 0.6);
     padding: 0 0.35em;
-    font-weight: 600;
-    font-size: 0.82em;
-    letter-spacing: 0.04em;
+    font-weight: 500;
+    font-size: 0.86em;
     white-space: nowrap;
   }
-  .mv-caption { font-family: var(--body); font-weight: 300; color: var(--dim); font-size: 0.8rem; margin-top: 8px; }
+
+  .found { list-style: none; display: flex; flex-direction: column; gap: 6px; }
+  .found li {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+    border: 1px solid var(--line);
+    background: var(--panel-2);
+    padding: 9px 12px;
+  }
+  .found .what { color: var(--text); font-weight: 500; }
+  .found .then { margin-left: auto; font-size: 0.86rem; color: var(--dim); }
+  .found .none { color: var(--dim); border-style: dashed; }
+  .c-secret { color: var(--block); }
+  .c-pii { color: var(--redact); }
+  .c-injection { color: var(--inject); }
+
+  .meter-box { margin-top: 10px; border: 1px solid rgba(182, 166, 242, 0.3); background: var(--panel-2); padding: 12px 14px; }
+  .meter { position: relative; height: 10px; background: var(--panel); border: 1px solid var(--line); margin: 8px 0 6px; }
+  .meter .fill { position: absolute; inset: 0 auto 0 0; background: linear-gradient(90deg, rgba(182, 166, 242, 0.35), var(--inject)); transition: width 0.35s cubic-bezier(0.2, 0.8, 0.2, 1); }
+  .meter .tick { position: absolute; top: -5px; bottom: -5px; width: 2px; background: var(--block); }
+  .meter-scale { display: flex; justify-content: space-between; font-size: 0.82rem; color: var(--dim); }
+  .meter-scale b { color: var(--text); font-weight: 600; }
+  .meter-note { font-size: 0.88rem; color: var(--dim); margin-top: 6px; }
+
+  details.tech { margin-top: 18px; border-top: 1px solid var(--line); padding-top: 12px; }
+  details.tech > summary {
+    cursor: pointer;
+    list-style: none;
+    font-size: 0.86rem;
+    font-weight: 500;
+    color: var(--gold);
+    display: inline-flex;
+    gap: 7px;
+  }
+  details.tech > summary::-webkit-details-marker { display: none; }
+  details.tech > summary::before { content: "+"; font-family: var(--mono); width: 1ch; }
+  details.tech[open] > summary::before { content: "\2212"; }
+  details.tech > summary:hover { color: var(--gold-hi); }
+  .tech-body { margin-top: 12px; font-family: var(--mono); font-size: 0.8rem; color: var(--dim); }
+  .tech-body .row { display: flex; gap: 10px; padding: 5px 0; border-bottom: 1px solid var(--line); flex-wrap: wrap; }
+  .tech-body .row .k { color: var(--faint); min-width: 13ch; }
+  .tech-body .row .v { color: var(--text); word-break: break-word; }
+  .tech-body table { border-collapse: collapse; width: 100%; margin-top: 8px; }
+  .tech-body th { text-align: left; color: var(--faint); font-weight: 400; padding: 5px 12px 5px 0; border-bottom: 1px solid var(--line-2); white-space: nowrap; }
+  .tech-body td { padding: 5px 12px 5px 0; border-bottom: 1px solid var(--line); color: var(--text); white-space: nowrap; }
+  .tech-body .tbl-scroll { overflow-x: auto; }
+  .errbody {
+    background: var(--panel-2);
+    border: 1px solid rgba(239, 111, 111, 0.35);
+    color: var(--text);
+    padding: 10px 12px;
+    margin-top: 8px;
+    white-space: pre-wrap;
+    word-break: break-word;
+  }
+  .tech-cap { font-family: var(--body); font-size: 0.86rem; color: var(--dim); margin-top: 12px; }
 
   /* ---------- audit ---------- */
+  .audit-sub { color: var(--dim); margin: -6px 0 14px; }
   .table-scroll { overflow-x: auto; }
-  .audit-table { width: 100%; border-collapse: collapse; font-size: 0.78rem; min-width: 720px; }
+  .audit-table { width: 100%; border-collapse: collapse; font-family: var(--mono); font-size: 0.8rem; min-width: 760px; }
   .audit-table th {
     text-align: left;
+    font-family: var(--body);
+    font-weight: 500;
     color: var(--faint);
-    font-weight: 400;
-    letter-spacing: 0.1em;
-    font-size: 0.7rem;
-    padding: 6px 14px 6px 0;
+    font-size: 0.8rem;
+    padding: 6px 14px 8px 0;
     border-bottom: 1px solid var(--line-2);
     white-space: nowrap;
   }
-  .audit-table td {
-    padding: 7px 14px 7px 0;
-    border-bottom: 1px dashed var(--line);
-    color: var(--dim);
-    white-space: nowrap;
-  }
+  .audit-table td { padding: 8px 14px 8px 0; border-bottom: 1px solid var(--line); color: var(--dim); white-space: nowrap; }
+  .audit-table td.dets { white-space: normal; max-width: 260px; }
   .audit-table tr.fresh td { animation: flash 1.1s ease both; }
-  @keyframes flash { from { background: rgba(196, 163, 90, 0.12); } to { background: transparent; } }
-  .audit-table .act { font-weight: 600; letter-spacing: 0.08em; }
+  @keyframes flash { from { background: rgba(196, 163, 90, 0.14); } to { background: transparent; } }
+  .audit-table .act { font-weight: 600; }
   .audit-table .act.block { color: var(--block); }
   .audit-table .act.redact { color: var(--redact); }
   .audit-table .act.allow { color: var(--allow); }
-  .audit-table .hash { color: var(--faint); }
-  .audit-empty { color: var(--faint); font-size: 0.8rem; padding: 14px 0 4px; }
-  .audit-note { font-family: var(--body); font-weight: 300; color: var(--dim); font-size: 0.84rem; line-height: 1.7; margin-top: 12px; max-width: 90ch; }
-  .audit-note b { color: var(--text); font-weight: 500; }
+  .audit-empty { color: var(--dim); padding: 10px 0 4px; }
+  .audit-note { color: var(--faint); font-size: 0.88rem; line-height: 1.65; margin-top: 12px; max-width: 90ch; }
 
   /* ---------- footer ---------- */
   footer {
@@ -460,21 +479,23 @@
     padding-top: 16px;
     border-top: 1px solid var(--line);
     color: var(--faint);
-    font-size: 0.76rem;
+    font-size: 0.86rem;
     display: flex;
     flex-wrap: wrap;
-    gap: 8px 26px;
+    gap: 8px 28px;
   }
   footer a { color: var(--dim); text-decoration: none; border-bottom: 1px solid var(--line-2); }
   footer a:hover { color: var(--text); }
 
-  @keyframes rise {
-    from { opacity: 0; transform: translateY(10px); }
-    to   { opacity: 1; transform: translateY(0); }
-  }
-
+  @keyframes rise { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
   @media (prefers-reduced-motion: reduce) {
     *, *::before, *::after { animation: none !important; transition: none !important; }
+  }
+  @media (max-width: 520px) {
+    .wrap { padding: 20px 16px 48px; }
+    .panel { padding: 18px 16px; }
+    .head-right { margin-left: 0; }
+    .v-word { font-size: 2.1rem; }
   }
 </style>
 </head>
@@ -490,106 +511,104 @@
     </div>
     <h1 class="wordmark"><em>Gatekeep</em><small>PROMPT FIREWALL · LIVE DEMO</small></h1>
     <div class="head-right">
-      <a class="repo-link" href="https://nicolastrabazo.com/">← PORTFOLIO</a>
-      <button class="chip-btn" id="selftest-chip" aria-expanded="false" aria-controls="selftest-panel">
-        <span class="dot" id="selftest-dot"></span><span id="selftest-text">SELF-TEST …</span>
+      <a class="head-btn" href="https://nicolastrabazo.com/">← Portfolio</a>
+      <button class="head-btn" id="selftest-chip" aria-expanded="false" aria-controls="selftest-panel">
+        <span class="dot" id="selftest-dot"></span><span id="selftest-text">Running self-test…</span>
       </button>
-      <a class="repo-link" href="https://github.com/ntrabazo/gatekeep" target="_blank" rel="noopener">GITHUB ↗</a>
+      <a class="head-btn" href="https://github.com/ntrabazo/gatekeep" target="_blank" rel="noopener">GitHub ↗</a>
     </div>
   </header>
 
-  <p class="intro">
-    Gatekeep is a drop-in reverse proxy for the Anthropic API. It scans every prompt
-    before the model sees it: secrets are blocked, personal data is redacted, and
-    every prompt now also passes a <b>prompt-injection screen</b> — instruction
-    overrides, role hijacks, system-prompt leaks, delimiter smuggling, exfiltration
-    channels, and unicode obfuscation are scored against a block threshold.
-    Everything is audit-logged without ever storing the raw text.
-    This page runs the same detection and policy pipeline, ported to JavaScript,
-    entirely in your browser. No API key, no server, nothing leaves this page.
-  </p>
-
-  <div id="selftest-panel" role="region" aria-label="Engine self-test results">
+  <div id="selftest-panel" role="region" aria-label="Engine self-test results" style="margin-top:18px;">
     <div id="selftest-detail"></div>
     <p class="note">
-      On load, this page replayed both of the repo's red-team corpora through the
-      in-browser engine. <code>harness/corpus.jsonl</code>: 30 dirty prompts and 20 clean
-      traps built to bait false positives (git SHAs, UUIDs, Luhn-invalid cards, invalid
-      SSNs, code). <code>harness/injection_corpus.jsonl</code>: 52 injection attacks
-      across 9 techniques and 48 hard benigns that contain trigger words like
-      &ldquo;ignore&rdquo;, &ldquo;system&rdquo;, and &ldquo;developer mode&rdquo; in
-      innocent contexts. Scoring is strict: actions must match exactly, and injection
-      flagging is judged at the 0.8 block threshold. The JS port is also parity-tested
-      against the Python engine finding-by-finding via <code>demo/parity.test.js</code> —
-      all 150 entries, including per-finding scores and both policy modes.
+      When this page loaded, it ran all 150 prompts from the project's two red-team test sets
+      through the same engine you are about to use. The first set has 50 secrets and
+      personal-data cases, including traps that should not trip it, like Git hashes and
+      invalid card numbers. The second has 100 prompt-injection cases, including innocent
+      sentences that use words like "ignore" and "developer mode". The browser engine is also
+      checked against the original Python engine, finding by finding, on every commit.
     </p>
   </div>
 
+  <section class="hero">
+    <h2 class="headline">Stop sensitive data <em>before</em> it reaches the AI.</h2>
+    <p class="lede">
+      Gatekeep sits between a team and the Claude API and checks every prompt on the way out.
+      <b>Secrets get blocked, personal data gets redacted, and hijack attempts get stopped.</b>
+      Every decision is logged without ever storing the prompt itself.
+    </p>
+    <ol class="steps">
+      <li><span class="n">01</span><span><span class="t">Pick an example</span> <span class="d">or type your own prompt.</span></span></li>
+      <li><span class="n">02</span><span><span class="t">Gatekeep checks it</span> <span class="d">with the real detection engine.</span></span></li>
+      <li><span class="n">03</span><span><span class="t">See the decision</span> <span class="d">and exactly what the AI would receive.</span></span></li>
+    </ol>
+    <p class="local-note">Runs entirely in your browser. No API key, no server, nothing leaves this page.</p>
+  </section>
+
   <div class="layout">
 
-    <!-- ============ left: request ============ -->
+    <!-- ============ left: try a prompt ============ -->
     <section class="col-left">
       <div class="panel">
-        <div class="sec-label"><span class="no">01</span> REQUEST <span class="rule"></span></div>
+        <div class="step-head ex-anchor" id="examples-top"><span class="k">01</span><h2>Try a prompt</h2><span class="rule"></span></div>
 
-        <label for="prompt" class="chips-title" style="display:block; margin-bottom:8px;">PROMPT, AS THE USER TYPED IT</label>
+        <div id="examples"></div>
+
+        <details class="more" id="more-examples">
+          <summary>More test cases</summary>
+          <div id="examples-more"></div>
+        </details>
+
+        <div class="or-rule">or write your own</div>
+
+        <label for="prompt" class="field-label">Prompt</label>
         <div class="scanwrap" id="scanwrap">
           <textarea id="prompt" spellcheck="false" autocomplete="off"
-            placeholder="Type anything. Paste an AWS key, a credit card number, an SSN, a prompt-injection attempt, or a clean question, then send it through the checkpoint."></textarea>
+            placeholder="Paste anything: a normal question, an API key, a card number, or an &quot;ignore your instructions&quot; trick."></textarea>
         </div>
         <div class="meta-line">
-          <span>client requests model: <span id="req-model"></span></span>
+          <span>Your app asked for <code id="req-model"></code></span>
           <span id="charcount"></span>
         </div>
 
-        <div class="chips" id="chips">
-          <span class="chips-title">SAMPLES, STRAIGHT FROM THE RED-TEAM CORPUS</span>
-        </div>
-
-        <div class="chips" id="inj-chips">
-          <span class="chips-title">INJECTION ATTACKS, FROM THE INJECTION CORPUS</span>
-        </div>
-
-        <div class="mode-row" role="group" aria-label="Injection policy mode">
-          <span class="chips-title">INJECTION MODE</span>
-          <button class="mode-btn" data-mode="enforce" id="mode-enforce">ENFORCE · BLOCK ≥ 0.8</button>
-          <button class="mode-btn" data-mode="shadow" id="mode-shadow">SHADOW · LOG-AND-ALLOW</button>
-          <span class="mode-note" id="mode-note"></span>
-        </div>
-
         <div class="send-row">
-          <button id="send">RUN THROUGH GATEKEEP</button>
-          <span class="kbd-hint">Ctrl+Enter</span>
+          <button id="send">Check this prompt</button>
+          <span class="kbd-hint">or press <kbd>Ctrl</kbd> + <kbd>Enter</kbd></span>
+        </div>
+
+        <div class="mode" role="group" aria-labelledby="mode-label">
+          <span class="field-label" id="mode-label">When a hijack attempt is detected</span>
+          <div class="seg">
+            <button data-mode="enforce" id="mode-enforce" aria-pressed="true">Block it</button>
+            <button data-mode="shadow" id="mode-shadow" aria-pressed="false">Log it, let it through</button>
+          </div>
+          <p class="mode-note" id="mode-note"></p>
         </div>
       </div>
     </section>
 
-    <!-- ============ right: decision + model view ============ -->
+    <!-- ============ right: decision ============ -->
     <section class="col-right">
-      <div class="panel">
-        <div class="sec-label"><span class="no">02</span> CHECKPOINT DECISION <span class="rule"></span></div>
+      <div class="panel" id="decision-panel">
+        <div class="step-head"><span class="k">02</span><h2>The decision</h2><span class="rule"></span></div>
         <div id="decision" aria-live="polite">
-          <div class="empty-state">NO REQUEST INSPECTED YET · send a prompt or hit a sample</div>
+          <div class="empty-state">Pick an example on the left to see what Gatekeep does with it.</div>
         </div>
-      </div>
-
-      <div class="panel">
-        <div class="sec-label"><span class="no">03</span> WHAT THE MODEL SAW <span class="rule"></span></div>
-        <div class="modelview idle" id="modelview">awaiting a request…</div>
-        <p class="mv-caption" id="mv-caption"></p>
       </div>
     </section>
   </div>
 
   <!-- ============ audit ============ -->
   <section class="panel audit-panel">
-    <div class="sec-label"><span class="no">04</span> AUDIT TRAIL <span class="rule"></span></div>
+    <div class="step-head"><span class="k">03</span><h2>Audit log</h2><span class="rule"></span></div>
+    <p class="audit-sub">Every decision gets a row. The prompt text itself never does.</p>
     <div class="table-scroll">
       <table class="audit-table" id="audit-table" style="display:none;">
         <thead>
           <tr>
-            <th>ts_utc</th><th>action</th><th>categories</th><th>detectors</th>
-            <th>inj_score</th><th>prompt_sha256</th><th>model_routed</th><th>latency_ms</th>
+            <th>Time (UTC)</th><th>Action</th><th>Categories</th><th>Detectors</th>
+            <th>Injection score</th><th>Prompt SHA-256</th><th>Model routed</th><th>Latency (ms)</th>
           </tr>
         </thead>
         <tbody id="audit-body"></tbody>
@@ -597,23 +616,21 @@
     </div>
     <div class="audit-empty" id="audit-empty">No decisions yet this session.</div>
     <p class="audit-note">
-      One row per decision, the same columns as the proxy's SQLite audit table.
-      The raw prompt is never stored: only a SHA-256 of it, the finding categories and
-      detector names, the routing outcome, and the decision latency. That is the never-log rule,
-      and it holds even here, in a page that never leaves your machine.
+      Same columns as the proxy's real audit table. Gatekeep keeps a SHA-256 fingerprint of each
+      prompt, what kinds of things it found, where the request went, and how long the check took.
+      The raw prompt is never written down, even here.
     </p>
   </section>
 
   <footer>
-    <span>GATEKEEP · MIT · <a href="https://github.com/ntrabazo/gatekeep" target="_blank" rel="noopener">github.com/ntrabazo/gatekeep</a></span>
-    <span>engine: JS port of the Python detectors, parity-tested on all 150 corpus entries</span>
-    <span>policy source: <code>policies.yaml</code> · secret&nbsp;»&nbsp;block · pii&nbsp;»&nbsp;redact · injection&nbsp;»&nbsp;score&nbsp;·&nbsp;shadow/enforce · default&nbsp;»&nbsp;allow</span>
+    <span>Gatekeep · MIT license · <a href="https://github.com/ntrabazo/gatekeep" target="_blank" rel="noopener">github.com/ntrabazo/gatekeep</a></span>
+    <span>The same detection engine as the Python proxy, ported to JavaScript and parity-tested on all 150 test prompts.</span>
   </footer>
 </div>
 
-<script src="gatekeep.js"></script>
-<script src="corpus.js"></script>
-<script src="injection_corpus.js"></script>
+<script src="gatekeep.js?v=20260907"></script>
+<script src="corpus.js?v=20260907"></script>
+<script src="injection_corpus.js?v=20260907"></script>
 <script>
 (function () {
   "use strict";
@@ -622,16 +639,52 @@
   const INJ_CORPUS = window.GatekeepInjectionCorpus;
   const REQUESTED_MODEL = "claude-sonnet-5";
   const REDUCED = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const THRESHOLD = G.POLICIES.injection.blockThreshold;
 
   const $ = (id) => document.getElementById(id);
   const ta = $("prompt");
-
   $("req-model").textContent = REQUESTED_MODEL;
 
+  /* ---------- plain-language names for detector output ---------- */
+  const NAME = {
+    aws_access_key: "AWS access key", github_token: "GitHub token", slack_token: "Slack token",
+    private_key: "Private key", jwt: "Login token (JWT)", entropy: "Random-looking secret",
+    ssn: "Social Security number", credit_card: "Credit card number", email: "Email address", phone: "Phone number",
+    instruction_override: "Instruction override", role_manipulation: "Role hijack",
+    system_prompt_leak: "System prompt extraction", delimiter_injection: "Fake system markup",
+    exfiltration: "Data-leak link", obfuscation: "Disguised characters",
+  };
+  const PHRASE = {
+    aws_access_key: "an AWS access key", github_token: "a GitHub token", slack_token: "a Slack token",
+    private_key: "a private key", jwt: "a login token", entropy: "a random-looking secret",
+    ssn: "a Social Security number", credit_card: "a credit card number", email: "an email address", phone: "a phone number",
+  };
+  // Injection techniques read as verbs: "an attempt to X and Y".
+  const ATTEMPT = {
+    instruction_override: "override the AI's instructions",
+    role_manipulation: "hijack the AI's role",
+    system_prompt_leak: "reveal its hidden system prompt",
+    delimiter_injection: "smuggle in fake system markup",
+    exfiltration: "leak data through a hidden link",
+  };
+  function injectionPhrase(dets) {
+    const techs = dets.filter((d) => d !== "obfuscation").map((d) => ATTEMPT[d] || d.replace(/_/g, " "));
+    let s = techs.length ? "an attempt to " + joinList(techs) : "a disguised hijack attempt";
+    if (dets.indexOf("obfuscation") !== -1 && techs.length) s += ", disguised with invisible or look-alike characters";
+    return s;
+  }
+  const CAT = { secret: "Secret", pii: "Personal data", injection: "Hijack attempt" };
+  const nameOf = (d) => NAME[d] || d.replace(/_/g, " ");
+  const phraseOf = (d) => PHRASE[d] || d.replace(/_/g, " ");
+
+  function joinList(items) {
+    if (items.length <= 1) return items.join("");
+    return items.slice(0, -1).join(", ") + " and " + items[items.length - 1];
+  }
+
   /* ---------- injection mode (demo starts in enforce so blocks are visible;
-     the product ships shadow-by-default — policies.yaml) ---------- */
+     the product ships shadow-by-default, see policies.yaml) ---------- */
   let injectionMode = "enforce";
-  const THRESHOLD = G.POLICIES.injection.blockThreshold;
 
   function policiesForMode() {
     const p = JSON.parse(JSON.stringify(G.POLICIES));
@@ -639,54 +692,102 @@
     return p;
   }
 
-  function renderModeButtons() {
-    $("mode-enforce").classList.toggle("active", injectionMode === "enforce");
-    $("mode-shadow").classList.toggle("active", injectionMode === "shadow");
+  function renderMode() {
+    $("mode-enforce").setAttribute("aria-pressed", String(injectionMode === "enforce"));
+    $("mode-shadow").setAttribute("aria-pressed", String(injectionMode === "shadow"));
     $("mode-note").textContent = injectionMode === "enforce"
-      ? "enforce blocks at score ≥ " + THRESHOLD.toFixed(1) + " — the shipped default is shadow; this demo starts in enforce so blocks are visible."
-      : "shadow is the shipped default: injection is scored and audit-logged, but never blocks. Flip to enforce to see the same prompt stopped.";
+      ? "Anything scoring " + THRESHOLD.toFixed(2) + " or higher on hijack risk is stopped. Gatekeep ships in log-only mode so a team can tune that line first. This demo starts in block mode so you can see it work."
+      : "How Gatekeep ships: hijack attempts are scored and recorded, but still sent. Switch back to Block it to see the same prompt stopped.";
   }
 
-  for (const id of ["mode-enforce", "mode-shadow"]) {
-    $(id).addEventListener("click", (e) => {
-      const next = e.currentTarget.dataset.mode;
-      if (next === injectionMode) return;
-      injectionMode = next;
-      renderModeButtons();
-      if (ta.value.trim() && auditRows.length) send(); // re-run so the mode change is visible
-    });
+  /* ---------- examples (indices into each corpus, 0-based) ---------- */
+  const EXAMPLES = [
+    { group: "Secrets and keys", items: [
+      ["Leaked AWS key", CORPUS, 0], ["Random-looking secret", CORPUS, 12] ] },
+    { group: "Personal data", items: [
+      ["SSN and email", CORPUS, 29], ["Credit card number", CORPUS, 19] ] },
+    { group: "Hijack attempts", items: [
+      ["“Ignore all previous instructions”", INJ_CORPUS, 0],
+      ["Attack hidden in a document", INJ_CORPUS, 47],
+      ["Disguised with invisible characters", INJ_CORPUS, 42] ] },
+    { group: "Harmless, but easy to get wrong", items: [
+      ["Everyday request", CORPUS, 31],
+      ["“Developer mode”, innocently", INJ_CORPUS, 78],
+      ["Git commit hash", CORPUS, 34] ] },
+  ];
+  const MORE = [
+    { group: "More secrets", items: [
+      ["GitHub token", CORPUS, 3], ["Login token (JWT)", CORPUS, 9] ] },
+    { group: "More hijack attempts", items: [
+      ["Role hijack (“You are now DAN”)", INJ_CORPUS, 12], ["Ask for the system prompt", INJ_CORPUS, 22],
+      ["Fake system markup", INJ_CORPUS, 29], ["Hidden data-leak image", INJ_CORPUS, 41],
+      ["Look-alike letters", INJ_CORPUS, 44] ] },
+    { group: "More traps that should pass", items: [
+      ["Invalid card number", CORPUS, 39], ["“Ignore any typos”", INJ_CORPUS, 52] ] },
+  ];
+  const DEFAULT_EXAMPLE = [CORPUS, 29];
+
+  const exButtons = [];
+  function predict(text) {
+    const pol = policiesForMode();
+    const findings = G.runAll(text.slice(0, G.SCAN_CAP), pol);
+    const d = G.decide([text], [findings], pol);
+    const flagged = d.action === "allow" && (d.injectionScore || 0) >= THRESHOLD;
+    return flagged ? "flag" : d.action;
   }
+  const TAG = { block: "blocked", redact: "redacted", allow: "allowed", flag: "logged" };
 
-  /* ---------- samples (indices into each corpus, 0-based) ---------- */
-  const SAMPLES = [
-    ["aws key", 0], ["github token", 3], ["jwt", 9], ["entropy secret", 12],
-    ["credit card", 19], ["ssn + email", 29], ["clean", 31],
-    ["trap · git sha", 34], ["trap · invalid card", 39],
-  ];
-  const INJ_SAMPLES = [
-    ["instruction override", 0], ["role hijack · DAN", 12], ["system prompt leak", 22],
-    ["delimiter smuggle", 29], ["exfil · image beacon", 41], ["zero-width evasion", 42],
-    ["homoglyph evasion", 44], ["indirect · poisoned doc", 47],
-    ["trap · ignore my typos", 52], ["trap · developer mode", 78],
-  ];
-
-  function addChips(containerId, corpus, samples) {
+  function buildExamples(containerId, groups) {
     const box = $(containerId);
-    for (const [label, idx] of samples) {
-      const b = document.createElement("button");
-      b.className = "chip";
-      b.textContent = label;
-      b.title = corpus[idx].text;
-      b.addEventListener("click", () => {
-        ta.value = corpus[idx].text;
-        updateSend();
-        send();
-      });
-      box.appendChild(b);
+    for (const g of groups) {
+      const wrap = document.createElement("div");
+      wrap.className = "ex-group";
+      const h = document.createElement("div");
+      h.className = "ex-head";
+      h.textContent = g.group;
+      const list = document.createElement("div");
+      list.className = "ex-list";
+      for (const [label, corpus, idx] of g.items) {
+        const b = document.createElement("button");
+        b.type = "button";
+        b.className = "ex";
+        b.setAttribute("aria-pressed", "false");
+        b.title = corpus[idx].text;
+        const lab = document.createElement("span");
+        lab.textContent = label;
+        const tag = document.createElement("span");
+        tag.className = "tag";
+        b.append(lab, tag);
+        b._text = corpus[idx].text;
+        b._tag = tag;
+        b.addEventListener("click", () => {
+          ta.value = b._text;
+          setActive(b);
+          updateSend();
+          send();
+        });
+        list.appendChild(b);
+        exButtons.push(b);
+      }
+      wrap.append(h, list);
+      box.appendChild(wrap);
     }
   }
-  addChips("chips", CORPUS, SAMPLES);
-  addChips("inj-chips", INJ_CORPUS, INJ_SAMPLES);
+
+  function refreshTags() {
+    for (const b of exButtons) {
+      const o = predict(b._text);
+      b._tag.className = "tag t-" + o;
+      b._tag.textContent = TAG[o];
+    }
+  }
+
+  function setActive(btn) {
+    for (const b of exButtons) b.setAttribute("aria-pressed", String(b === btn));
+  }
+
+  buildExamples("examples", EXAMPLES);
+  buildExamples("examples-more", MORE);
 
   /* ---------- self-test: replay both corpora in-browser ---------- */
   function selfTest() {
@@ -722,41 +823,38 @@
     const totalAll = CORPUS.length + INJ_CORPUS.length;
 
     $("selftest-dot").className = "dot " + (pass ? "pass" : "fail");
-    $("selftest-text").textContent =
-      "SELF-TEST " + totalHit + "/" + totalAll + (pass ? " PASS" : " FAIL");
+    $("selftest-text").textContent = (pass ? "Self-test passed " : "Self-test failed ") + totalHit + "/" + totalAll;
 
     const d = $("selftest-detail");
     const tbl = document.createElement("table");
     const head = tbl.insertRow();
-    for (const h of ["category", "total", "hit", "miss"]) {
+    for (const h of ["test cases", "total", "correct", "missed"]) {
       const th = document.createElement("th");
       th.textContent = h;
       head.appendChild(th);
     }
-    for (const label of ["secret", "pii", "clean"]) {
-      const r = tbl.insertRow();
-      const s = stats[label];
-      for (const v of [label, s.total, s.hit, s.total - s.hit]) r.insertCell().textContent = v;
-    }
-    for (const [label, s] of [["injection attacks", inj.attack], ["hard benigns", inj.benign]]) {
+    const rows = [
+      ["secrets", stats.secret], ["personal data", stats.pii], ["clean traps", stats.clean],
+      ["injection attacks", inj.attack], ["innocent look-alikes", inj.benign],
+    ];
+    for (const [label, s] of rows) {
       const r = tbl.insertRow();
       for (const v of [label, s.total, s.hit, s.total - s.hit]) r.insertCell().textContent = v;
     }
     d.replaceChildren(tbl);
     const summary = document.createElement("div");
-    summary.style.fontSize = "0.82rem";
+    summary.className = "summary";
     summary.textContent =
-      "SECRETS/PII CATCH " + dirtyHit + "/" + dirtyTotal +
-      " · INJECTION CATCH " + inj.attack.hit + "/" + inj.attack.total +
-      " · HARD-BENIGN FALSE FLAGS " + (inj.benign.total - inj.benign.hit) + "/" + inj.benign.total +
-      " · FALSE-POSITIVE BLOCKS " + fpBlocks + " · " + totalAll + " prompts scanned in " +
-      ms.toFixed(1) + " ms · RESULT: " + (pass ? "PASS" : "FAIL");
+      "secrets/personal data caught " + dirtyHit + "/" + dirtyTotal +
+      " · injections caught " + inj.attack.hit + "/" + inj.attack.total +
+      " · innocent prompts wrongly flagged " + (inj.benign.total - inj.benign.hit) + "/" + inj.benign.total +
+      " · clean prompts wrongly blocked " + fpBlocks + " · " + totalAll + " prompts in " +
+      ms.toFixed(1) + " ms · " + (pass ? "PASS" : "FAIL");
     d.appendChild(summary);
   }
 
   $("selftest-chip").addEventListener("click", () => {
-    const p = $("selftest-panel");
-    const open = p.classList.toggle("open");
+    const open = $("selftest-panel").classList.toggle("open");
     $("selftest-chip").setAttribute("aria-expanded", String(open));
   });
 
@@ -793,131 +891,185 @@
     return n;
   }
 
+  const ICON = {
+    block: '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M5 3.5h14v9c0 4.2-3.2 6.9-7 8-3.8-1.1-7-3.8-7-8z"/><path d="M9.2 9.2l5.6 5.6M14.8 9.2l-5.6 5.6"/></svg>',
+    redact: '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M5 3.5h14v9c0 4.2-3.2 6.9-7 8-3.8-1.1-7-3.8-7-8z"/><path d="M8.5 11.5h7"/></svg>',
+    allow: '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M5 3.5h14v9c0 4.2-3.2 6.9-7 8-3.8-1.1-7-3.8-7-8z"/><path d="M8.6 12.2l2.4 2.4 4.6-4.8"/></svg>',
+    flag: '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M5 3.5h14v9c0 4.2-3.2 6.9-7 8-3.8-1.1-7-3.8-7-8z"/><path d="M12 8v5M12 15.6v.4"/></svg>',
+  };
+
+  function uniqueDetectors(findings, category) {
+    return [...new Set(findings.filter((f) => !category || f.category === category).map((f) => f.detector))];
+  }
+
   function renderDecision(r) {
     const box = $("decision");
     box.replaceChildren();
-
-    const row = el("div", "verdict-row");
-    const stamp = el("div", "stamp v-" + r.decision.action + (REDUCED ? "" : " in"), r.decision.action.toUpperCase());
-    row.appendChild(stamp);
-
+    const action = r.decision.action;
+    const score = r.decision.injectionScore || 0;
+    const injDet = uniqueDetectors(r.findings, "injection");
+    const dataDet = uniqueDetectors(r.findings).filter((d) => injDet.indexOf(d) === -1);
     const injBlocked = r.decision.matchedRules.indexOf("injection:block") !== -1;
-    const detail = el("div", "verdict-detail");
-    const lead = el("div", "lead");
-    if (r.decision.action === "block") {
-      lead.textContent = injBlocked
-        ? "HTTP 403 returned to the client. The injection screen tripped in enforce mode: score " +
-          r.decision.injectionScore.toFixed(2) + " ≥ " + THRESHOLD.toFixed(1) +
-          " threshold. The request never left the checkpoint."
-        : "HTTP 403 returned to the client. The request never left the checkpoint.";
-    } else if (r.decision.action === "redact") {
-      lead.textContent = "Sensitive spans replaced, then forwarded. Routed to " + r.modelRouted +
-        ": policies.yaml sends redacted traffic to a cheaper model.";
-    } else {
-      lead.textContent = "No findings mapped to a rule. Forwarded verbatim to " + r.modelRouted + ".";
-    }
-    detail.appendChild(lead);
-    const msLabel = r.latencyMs < 0.05 ? "under 0.1 ms" : r.latencyMs.toFixed(2) + " ms";
-    detail.appendChild(el("div", "latency", "decision in " + msLabel + ", in this tab"));
+    const flagged = action === "allow" && score >= THRESHOLD;
+    const kind = flagged ? "flag" : action;
 
-    if (r.decision.action === "block") {
-      const cats = r.categories.split(",").join(", ");
-      const err = el("pre", "errbody", JSON.stringify(
-        { type: "error", error: { type: "invalid_request_error", message: "Gatekeep policy violation: " + cats } },
-        null, 2));
-      detail.appendChild(err);
-    }
-    row.appendChild(detail);
-    box.appendChild(row);
+    /* verdict card */
+    const card = el("div", "verdict v-" + kind + (REDUCED ? "" : " in"));
+    const top = el("div", "v-top");
+    top.innerHTML = ICON[kind];
+    top.appendChild(el("span", "v-word", { block: "Blocked", redact: "Redacted", allow: "Allowed", flag: "Allowed, but flagged" }[kind]));
+    card.appendChild(top);
 
-    // Injection screen readout — rendered whenever the screen found something.
-    const injFindings = r.findings.filter((f) => f.category === "injection");
-    if (injFindings.length) {
-      const scr = el("div", "inj-screen");
-      scr.appendChild(el("div", "inj-title", "INJECTION SCREEN · TIER-1 HEURISTICS · " + r.mode.toUpperCase() + " MODE"));
-
-      const meter = el("div", "inj-meter");
-      const fill = el("div", "fill");
-      fill.style.width = (r.decision.injectionScore * 100).toFixed(0) + "%";
-      meter.appendChild(fill);
-      const tick = el("div", "tick");
-      tick.style.left = (THRESHOLD * 100).toFixed(0) + "%";
-      tick.title = "block threshold " + THRESHOLD.toFixed(1);
-      meter.appendChild(tick);
-      scr.appendChild(meter);
-
-      const scale = el("div", "inj-scale");
-      scale.appendChild(el("span", null, "score " + r.decision.injectionScore.toFixed(2)));
-      scale.appendChild(el("span", null, "block threshold " + THRESHOLD.toFixed(1)));
-      scr.appendChild(scale);
-
-      const outcome = el("div", "inj-outcome");
-      const techs = r.decision.injectionCategories.join(", ");
-      const over = r.decision.injectionScore >= THRESHOLD;
-      if (injBlocked) {
-        outcome.innerHTML = "<b>" + techs + "</b> — over the threshold in enforce mode: <b>blocked</b>.";
-      } else if (over) {
-        outcome.innerHTML = "<b>" + techs + "</b> — over the threshold, but shadow mode logs and allows. " +
-          "<span class='would'>Enforce mode would have blocked this prompt.</span>";
+    let lead, why = "";
+    const dataPhrase = joinList(dataDet.map(phraseOf));
+    const injPhrase = injDet.length ? injectionPhrase(injDet) : "";
+    if (action === "block") {
+      lead = "Gatekeep stopped this prompt before it reached the AI.";
+      if (injBlocked && !dataDet.some((d) => r.findings.find((f) => f.detector === d && f.category === "secret"))) {
+        why = "It looks like " + injPhrase + ". Its risk score is " + score.toFixed(2) +
+          ", over the " + THRESHOLD.toFixed(2) + " block line.";
       } else {
-        outcome.innerHTML = "<b>" + techs + "</b> — scored below the block threshold: logged, allowed in either mode.";
+        why = "It contains " + dataPhrase + (injPhrase ? ", plus " + injPhrase : "") + ".";
       }
-      scr.appendChild(outcome);
-      box.appendChild(scr);
-    }
-
-    box.appendChild(el("div", "findings-title", "FINDINGS · previews are 4 chars max, raw matches never leave the detector layer"));
-    const ul = el("ul", "findings");
-    if (r.findings.length === 0) {
-      ul.appendChild(el("li", "none", "none · every detector ran: 5 named secret patterns, entropy fallback, ssn, credit card, email, phone, and the injection screen (5 techniques + unicode obfuscation)"));
+    } else if (action === "redact") {
+      lead = "Gatekeep removed the sensitive parts, then sent the rest to the AI.";
+      why = "It found " + dataPhrase + (injPhrase ? ", and logged " + injPhrase : "") + ".";
+    } else if (flagged) {
+      lead = "Sent to the AI, but recorded as a likely hijack attempt.";
+      why = "Its risk score is " + score.toFixed(2) + ", over the block line, but this checkpoint is in log-only mode. Switch to Block it to stop it.";
+    } else if (injDet.length) {
+      lead = "Nothing worth stopping. The prompt went to the AI unchanged.";
+      why = "A few hijack-like phrases scored " + score.toFixed(2) + ", below the " + THRESHOLD.toFixed(2) + " block line.";
     } else {
-      for (const f of r.findings) {
-        const li = el("li");
-        li.appendChild(el("span", "badge " + f.category, f.category.toUpperCase()));
-        li.appendChild(el("span", "det", f.detector));
-        li.appendChild(el("span", "span", "chars " + f.span[0] + "–" + f.span[1] +
-          (f.category === "injection" ? " (normalized)" : "")));
-        if (f.category === "injection") li.appendChild(el("span", "span", "weight " + f.score.toFixed(2)));
-        li.appendChild(el("span", "preview", "preview " + JSON.stringify(f.preview)));
-        ul.appendChild(li);
-      }
+      lead = "Nothing sensitive found. The prompt went to the AI unchanged.";
+      why = "Every check ran: known key formats, random-looking secrets, Social Security and card numbers, emails, phone numbers, and the hijack screen.";
     }
-    box.appendChild(ul);
+    card.appendChild(el("p", "v-lead", lead));
+    card.appendChild(el("p", "v-why", why));
+    box.appendChild(card);
 
-    const rules = [...new Set(r.decision.matchedRules)];
-    const ruleLine = el("div", "rule-line");
-    ruleLine.append("policy: ");
-    const code = el("code", null, rules.length ? rules.join(" · ") : "default_action: allow");
-    ruleLine.appendChild(code);
-    box.appendChild(ruleLine);
-  }
-
-  function renderModelView(r) {
-    const mv = $("modelview");
-    const cap = $("mv-caption");
-    mv.replaceChildren();
-    mv.className = "modelview";
-
-    if (r.decision.action === "block") {
+    /* what the AI receives */
+    const mvSub = el("div", "sub");
+    const mvHead = el("div", "sub-head");
+    mvHead.appendChild(el("h3", null, "What the AI receives"));
+    const aside = el("span", "aside");
+    if (action === "block") aside.textContent = "Sent to: nothing";
+    else {
+      aside.append("Sent to ");
+      aside.appendChild(el("code", null, r.modelRouted));
+    }
+    mvHead.appendChild(aside);
+    mvSub.appendChild(mvHead);
+    const mv = el("div", "modelview");
+    if (action === "block") {
       mv.classList.add("blocked");
-      mv.textContent = "NOTHING · THE REQUEST WAS STOPPED AT THE CHECKPOINT";
-      cap.textContent = "The upstream API never received a byte of this prompt.";
-      return;
-    }
-    if (r.decision.action === "redact") {
+      mv.textContent = "Nothing. The request never left the checkpoint.";
+    } else if (action === "redact") {
       for (const seg of G.redactSegments(r.text, r.findings, G.POLICIES)) {
         if (seg.type === "text") mv.append(seg.value);
         else {
           const m = el("mark", "redaction", seg.value);
-          m.title = "detector: " + seg.detector + " · preview: " + seg.preview;
+          m.title = nameOf(seg.detector) + " removed";
           mv.appendChild(m);
         }
       }
-      cap.textContent = "Forwarded body, exactly as the model received it. Redacted spans are highlighted.";
-      return;
+    } else {
+      mv.textContent = r.text;
     }
-    mv.textContent = r.text;
-    cap.textContent = "Forwarded untouched.";
+    mvSub.appendChild(mv);
+    box.appendChild(mvSub);
+
+    /* what gatekeep found */
+    const fSub = el("div", "sub");
+    const fHead = el("div", "sub-head");
+    fHead.appendChild(el("h3", null, "What Gatekeep found"));
+    fSub.appendChild(fHead);
+    const ul = el("ul", "found");
+    const seen = new Set();
+    for (const f of r.findings) {
+      if (seen.has(f.detector)) continue;
+      seen.add(f.detector);
+      const li = el("li");
+      li.appendChild(el("span", "tag c-" + f.category, CAT[f.category] || f.category));
+      li.appendChild(el("span", "what", nameOf(f.detector)));
+      let then;
+      if (f.category === "secret") then = "blocked";
+      else if (f.category === "pii") then = action === "block" ? "blocked with the request" : "replaced before sending";
+      else then = injBlocked ? "blocked" : "scored and logged";
+      li.appendChild(el("span", "then", then));
+      ul.appendChild(li);
+    }
+    if (!seen.size) ul.appendChild(el("li", "none", "Nothing. The prompt is clean."));
+    fSub.appendChild(ul);
+
+    if (injDet.length) {
+      const mb = el("div", "meter-box");
+      const scale = el("div", "meter-scale");
+      const left = el("span");
+      left.append("Hijack risk ");
+      left.appendChild(el("b", null, score.toFixed(2)));
+      scale.appendChild(left);
+      scale.appendChild(el("span", null, "block line " + THRESHOLD.toFixed(2)));
+      mb.appendChild(scale);
+      const meter = el("div", "meter");
+      const fill = el("div", "fill");
+      fill.style.width = Math.min(100, score * 100).toFixed(0) + "%";
+      const tick = el("div", "tick");
+      tick.style.left = (THRESHOLD * 100).toFixed(0) + "%";
+      meter.append(fill, tick);
+      mb.appendChild(meter);
+      mb.appendChild(el("p", "meter-note", injBlocked
+        ? "Over the line in block mode, so the request was stopped."
+        : score >= THRESHOLD
+          ? "Over the line, but log-only mode records it and lets it through."
+          : "Under the line, so it is logged and allowed in either mode."));
+      fSub.appendChild(mb);
+    }
+    box.appendChild(fSub);
+
+    /* technical details */
+    const det = el("details", "tech");
+    det.appendChild(el("summary", null, "Technical details"));
+    const body = el("div", "tech-body");
+    const kv = (k, v) => { const row = el("div", "row"); row.append(el("span", "k", k), el("span", "v", v)); body.appendChild(row); };
+    kv("response", action === "block" ? "HTTP 403 to the calling app" : "HTTP 200, forwarded upstream");
+    kv("policy rule", [...new Set(r.decision.matchedRules)].join(" · ") || "default_action: allow");
+    kv("injection mode", r.mode === "enforce" ? "enforce (block at " + THRESHOLD.toFixed(2) + ")" : "shadow (log and allow)");
+    kv("model routed", r.modelRouted === null ? "none" : r.modelRouted + (action === "redact" ? "  (policies.yaml routes redacted traffic to a cheaper model)" : ""));
+    kv("decision time", (r.latencyMs < 0.05 ? "under 0.1" : r.latencyMs.toFixed(2)) + " ms, in this tab");
+    if (action === "block") {
+      body.appendChild(el("pre", "errbody", JSON.stringify(
+        { type: "error", error: { type: "invalid_request_error", message: "Gatekeep policy violation: " + r.categories.split(",").join(", ") } },
+        null, 2)));
+    }
+    if (r.findings.length) {
+      const sc = el("div", "tbl-scroll");
+      const t = el("table");
+      const hr = t.insertRow();
+      for (const h of ["category", "detector", "chars", "weight", "preview"]) hr.appendChild(el("th", null, h));
+      for (const f of r.findings) {
+        const tr = t.insertRow();
+        for (const v of [f.category, f.detector, f.span[0] + "–" + f.span[1] + (f.category === "injection" ? " (normalized)" : ""),
+          f.category === "injection" ? f.score.toFixed(2) : "·", JSON.stringify(f.preview)]) tr.insertCell().textContent = v;
+      }
+      sc.appendChild(t);
+      body.appendChild(sc);
+      body.appendChild(el("p", "tech-cap", "Previews are capped at 4 characters. Raw matches never leave the detector layer."));
+    }
+    det.appendChild(body);
+    box.appendChild(det);
+
+    const again = el("button", "try-another", "↑ Try another example");
+    again.type = "button";
+    again.addEventListener("click", () => $("examples-top").scrollIntoView({ behavior: REDUCED ? "auto" : "smooth", block: "start" }));
+    box.appendChild(again);
+  }
+
+  // Single-column layouts put the decision below the fold: bring it into view after a run.
+  const NARROW = window.matchMedia("(max-width: 950px)");
+  function revealDecision() {
+    if (!NARROW.matches) return;
+    $("decision-panel").scrollIntoView({ behavior: REDUCED ? "auto" : "smooth", block: "start" });
   }
 
   function renderAudit() {
@@ -933,9 +1085,9 @@
       tr.appendChild(ts);
       tr.appendChild(el("td", "act " + r.decision.action, r.decision.action));
       tr.appendChild(el("td", null, r.categories || "·"));
-      tr.appendChild(el("td", null, r.detectors || "·"));
+      tr.appendChild(el("td", "dets", r.detectors ? r.detectors.split(",").join(", ") : "·"));
       tr.appendChild(el("td", null, r.decision.injectionScore ? r.decision.injectionScore.toFixed(2) : "0.00"));
-      const hash = el("td", "hash", r.sha.slice(0, 12) + "…");
+      const hash = el("td", null, r.sha.slice(0, 12) + "…");
       hash.title = r.sha;
       tr.appendChild(hash);
       tr.appendChild(el("td", null, r.modelRouted === null ? "NULL" : r.modelRouted));
@@ -946,7 +1098,7 @@
 
   /* ---------- send flow ---------- */
   let busy = false;
-  function send() {
+  function send(opts) {
     if (busy || !ta.value.trim()) return;
     busy = true;
     const wrap = $("scanwrap");
@@ -955,9 +1107,9 @@
       auditRows.push(r);
       if (auditRows.length > 50) auditRows.shift();
       renderDecision(r);
-      renderModelView(r);
       renderAudit();
       busy = false;
+      if (!(opts && opts.quiet)) revealDecision();
     };
     if (REDUCED) { go(); return; }
     wrap.classList.remove("scanning");
@@ -968,18 +1120,35 @@
 
   function updateSend() {
     $("send").disabled = !ta.value.trim();
-    $("charcount").textContent = ta.value.length ? ta.value.length + " chars" : "";
+    $("charcount").textContent = ta.value.length ? ta.value.length + " characters" : "";
   }
 
-  $("send").addEventListener("click", send);
-  ta.addEventListener("input", updateSend);
+  for (const id of ["mode-enforce", "mode-shadow"]) {
+    $(id).addEventListener("click", (e) => {
+      const next = e.currentTarget.dataset.mode;
+      if (next === injectionMode) return;
+      injectionMode = next;
+      renderMode();
+      refreshTags();
+      if (ta.value.trim() && auditRows.length) send(); // re-run so the mode change is visible
+    });
+  }
+
+  $("send").addEventListener("click", () => send());
+  ta.addEventListener("input", () => { setActive(null); updateSend(); });
   ta.addEventListener("keydown", (e) => {
     if ((e.ctrlKey || e.metaKey) && e.key === "Enter") { e.preventDefault(); send(); }
   });
 
-  updateSend();
-  renderModeButtons();
+  renderMode();
+  refreshTags();
   selfTest();
+
+  // Open on a real example so the page never starts empty.
+  ta.value = DEFAULT_EXAMPLE[0][DEFAULT_EXAMPLE[1]].text;
+  setActive(exButtons.find((b) => b._text === ta.value) || null);
+  updateSend();
+  send({ quiet: true });
 })();
 </script>
 </body>
