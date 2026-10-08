@@ -9,8 +9,8 @@ injection:
   enabled: true
   mode: shadow                   # shadow = log-and-allow (default) | enforce = block at threshold
   block_threshold: 0.8
-  judge_enabled: false           # Tier-2 seam — inert in v1 (PLAN-injection.md §16)
-  judge_band: [0.3, 0.7]
+  judge_enabled: false           # Tier-2 LLM judge (claude-haiku-5-5): opt-in, one API call per judged prompt
+  judge_band: [0.0, 0.8]         # judge when band[0] <= Tier-1 score < band[1]; [0.3, 0.8] = suspicious only
 rules:                           # first match wins, by finding category
   - {category: secret, action: block}
   - {category: pii,    action: redact}

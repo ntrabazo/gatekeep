@@ -23,9 +23,10 @@ class InjectionCfg(BaseModel):
     enabled: bool = True
     mode: Literal["shadow", "enforce"] = "shadow"
     block_threshold: float = 0.8
-    # Tier-2 judge seam — inert in v1; the v2 judge (PLAN-injection.md §16) reads these.
+    # Tier-2 LLM judge (detectors/injection_judge.py) — opt-in. It runs only when the Tier-1
+    # score s satisfies band[0] <= s < band[1]; [0.0, 0.8) = every prompt Tier-1 doesn't block.
     judge_enabled: bool = False
-    judge_band: tuple[float, float] = (0.3, 0.7)
+    judge_band: tuple[float, float] = (0.0, 0.8)
 
 
 class Rule(BaseModel):

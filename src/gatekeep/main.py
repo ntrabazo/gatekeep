@@ -11,6 +11,7 @@ from datetime import datetime, timezone
 from typing import Optional
 
 from fastapi import FastAPI, Request, Response
+from fastapi.concurrency import run_in_threadpool
 from fastapi.responses import JSONResponse
 
 from . import audit, forwarder
@@ -42,6 +43,18 @@ def _now_utc() -> str:
     return datetime.now(timezone.utc).isoformat()
 
 
+def _judge_wanted(tier1_score: float) -> bool:
+    cfg = POLICIES.injection
+    return cfg.judge_enabled and cfg.judge_band[0] <= tier1_score < cfg.judge_band[1]
+
+
+async def _run_judge(text: str, api_key: Optional[str]):
+    """Tier-2 judge, imported lazily (never while the flag is off) and run off the event loop.
+    Uses the caller's own key, like the proxy itself; fails open on its own."""
+    from .detectors.injection_judge import judge
+    return await run_in_threadpool(judge, text, api_key)
+
+
 @app.get("/health")
 def health() -> dict:
     return {"status": "ok"}
@@ -69,15 +82,25 @@ async def screen(request: Request) -> Response:
     text = body["text"][:SCAN_CAP]
     # Injection findings only: secrets/PII would otherwise score a benign email as 1.0.
     findings = [f for f in run_all(text, POLICIES) if f.category == "injection"]
+    score, tier, extra = document_score(findings), "tier1", {}
+    if _judge_wanted(score):
+        v = await _run_judge(text, request.headers.get("x-api-key"))
+        if v.score is not None:
+            extra["judge"] = {"injection": v.injection, "confidence": v.confidence,
+                              "tier1_score": round(score, 4), "latency_ms": round(v.latency_ms, 1)}
+            score, tier = v.score, "judge"
+        else:
+            extra["judge_skipped"] = f"{v.skipped} — fail-open to tier1"
     return JSONResponse({
-        "score": round(document_score(findings), 4),
+        "score": round(score, 4),
         "categories": sorted({f.detector for f in findings}),
         "flagged_spans": [
             {"category": f.detector, "span": list(f.span), "preview": f.preview, "score": f.score}
             for f in findings
         ],
         "latency_ms": round((time.perf_counter() - t0) * 1000, 3),
-        "tier": "tier1",  # v2's LLM judge sets "judge" here (PLAN-injection.md §16)
+        "tier": tier,
+        **extra,
     })
 
 
@@ -103,10 +126,27 @@ async def messages(request: Request) -> Response:
     texts = [r.text for r in refs]
     findings_per_text = [run_all(t[:SCAN_CAP], POLICIES) for t in texts]
     decision = decide(texts, findings_per_text, POLICIES)
+    tier = "tier1"
+    if decision.action != "block" and _judge_wanted(decision.injection_score):
+        # The judge reads the conversation, not the operator's own (trusted) system prompt.
+        convo = "\n\n".join(r.text[:SCAN_CAP] for r in refs if r.path[0] == "messages")
+        v = await _run_judge(convo, headers.get("x-api-key"))
+        if v.score is not None:
+            tier = "judge"
+            decision.injection_score = v.score
+            if v.score >= POLICIES.injection.block_threshold:
+                decision.injection_categories = sorted(set(decision.injection_categories) | {"judge"})
+                if POLICIES.injection.mode == "enforce":
+                    decision.action = "block"
+                    decision.matched_rules.append("injection:block")
 
     prompt_sha256 = hashlib.sha256("".join(texts).encode()).hexdigest()
-    categories = ",".join(sorted({f.category for fs in findings_per_text for f in fs}))
+    category_set = {f.category for fs in findings_per_text for f in fs}
     detector_names = sorted({f.detector for fs in findings_per_text for f in fs})
+    if "judge" in decision.injection_categories:  # the judge can flag text Tier-1 had no findings on
+        category_set.add("injection")
+        detector_names = sorted(set(detector_names) | {"judge"})
+    categories = ",".join(sorted(category_set))
     if any(len(t) > SCAN_CAP for t in texts):
         detector_names.append("scan_truncated")
     detectors_csv = ",".join(detector_names)
@@ -115,6 +155,7 @@ async def messages(request: Request) -> Response:
     injection_headers = {
         "X-Gatekeep-Injection-Score": f"{decision.injection_score:.3f}",
         "X-Gatekeep-Injection-Categories": ",".join(decision.injection_categories),
+        "X-Gatekeep-Injection-Tier": tier,
     }
 
     def _log(action: str, model_routed: Optional[str] = None, status_upstream: Optional[int] = None) -> None:

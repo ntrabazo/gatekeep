@@ -404,6 +404,67 @@
   footer a { color: var(--dim); text-decoration: none; border-bottom: 1px solid var(--line-2); }
   footer a:hover { color: var(--text); }
 
+  /* ---------- benchmarks: confidence intervals drawn as the design ---------- */
+  .bench-panel { margin-top: 18px; animation: rise 0.5s 0.26s cubic-bezier(0.2, 0.8, 0.2, 1) both; }
+  .bench-sub { color: var(--dim); font-size: 0.92rem; margin: -2px 0 16px; max-width: 78ch; }
+  .bench-sub b { color: var(--text); font-weight: 500; }
+  .bench-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0 36px; }
+  .bench-col + .bench-col { border-left: 1px solid var(--line); padding-left: 36px; }
+  .bench-kicker {
+    font-family: var(--mono); font-size: 0.7rem; letter-spacing: 0.14em; text-transform: uppercase;
+    color: var(--faint); display: flex; justify-content: space-between; gap: 12px;
+  }
+  .bench-hero { display: flex; align-items: baseline; gap: 14px; margin: 4px 0 2px; }
+  .bench-figure {
+    font-family: var(--display); font-weight: 300; font-size: clamp(2.6rem, 5vw, 3.6rem);
+    line-height: 1; letter-spacing: -0.02em; color: var(--gold);
+    font-variant-numeric: lining-nums tabular-nums;
+  }
+  .bench-figure small { font-size: 0.45em; color: var(--dim); margin-left: 2px; }
+  .bench-figure .plus { color: var(--inject); font-size: 0.55em; margin-left: 10px; font-weight: 400; }
+  .bench-caption { color: var(--dim); font-size: 0.88rem; line-height: 1.45; }
+  .bench-rows { list-style: none; margin-top: 14px; }
+  .bench-row { padding: 9px 0 10px; border-top: 1px solid var(--line); }
+  .bench-row-head { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; }
+  .bench-name { font-weight: 500; font-size: 0.93rem; }
+  .bench-what { display: block; color: var(--faint); font-size: 0.8rem; line-height: 1.35; }
+  .bench-val { font-family: var(--mono); font-size: 0.86rem; white-space: nowrap; text-align: right; }
+  .bench-val .n { color: var(--faint); font-size: 0.76rem; }
+  .bench-val .j { color: var(--inject); }
+  .gauge { position: relative; height: 14px; margin-top: 7px; }
+  .gauge::before { /* the scale itself: a hairline with end caps */
+    content: ""; position: absolute; left: 0; right: 0; top: 6px; height: 1px; background: var(--line-2);
+  }
+  .gauge .band {
+    position: absolute; top: 3px; height: 7px; min-width: 2px;
+    background: rgba(196, 163, 90, 0.26); border-left: 1px solid rgba(196, 163, 90, 0.5); border-right: 1px solid rgba(196, 163, 90, 0.5);
+    transform-origin: left center; animation: grow 0.7s 0.4s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+  }
+  .gauge .band.j { background: rgba(182, 166, 242, 0.22); border-color: rgba(182, 166, 242, 0.55); top: 4px; height: 5px; }
+  .gauge .tick { position: absolute; top: 0; width: 2px; height: 14px; margin-left: -1px; background: var(--gold); }
+  .gauge .tick.j { background: var(--inject); }
+  .gauge .scale {
+    position: absolute; right: 0; top: -1px; transform: translateY(-100%);
+    font-family: var(--mono); font-size: 0.64rem; color: var(--faint);
+  }
+  .bench-legend { display: flex; flex-wrap: wrap; gap: 6px 20px; margin-top: 16px; font-size: 0.82rem; color: var(--dim); }
+  .bench-legend i { display: inline-block; width: 18px; height: 7px; margin-right: 7px; vertical-align: middle; }
+  .bench-legend .lg-t { background: rgba(196, 163, 90, 0.26); box-shadow: inset 0 0 0 1px rgba(196, 163, 90, 0.5); }
+  .bench-legend .lg-j { background: rgba(182, 166, 242, 0.22); box-shadow: inset 0 0 0 1px rgba(182, 166, 242, 0.55); }
+  .bench-note { color: var(--faint); font-size: 0.84rem; line-height: 1.6; margin-top: 10px; max-width: 92ch; }
+  .bench-note a { color: var(--dim); text-decoration: none; border-bottom: 1px solid var(--line-2); }
+  .bench-note a:hover { color: var(--text); }
+  @keyframes grow { from { transform: scaleX(0); } to { transform: scaleX(1); } }
+  .bench-kicker span:last-child { white-space: nowrap; }
+  @media (max-width: 950px) {
+    .bench-grid { grid-template-columns: 1fr; }
+    .bench-col + .bench-col { border-left: none; padding-left: 0; margin-top: 22px; }
+  }
+  @media (max-width: 520px) {
+    #bench-date { display: none; }
+    .bench-kicker { letter-spacing: 0.08em; }
+  }
+
   /* ---------- narrow screens: examples become a swipe row above the prompt ---------- */
   @media (max-width: 950px) {
     .layout { grid-template-columns: 1fr; gap: 6px; }
@@ -458,12 +519,13 @@
   <div id="selftest-panel" role="region" aria-label="Engine self-test results">
     <div id="selftest-detail"></div>
     <p class="note">
-      When this page loaded, it ran all 150 prompts from the project's two red-team test sets
+      When this page loaded, it ran all 209 prompts from the project's two red-team test sets
       through the same engine you are about to use. The first set has 50 secrets and
       personal-data cases, including traps that should not trip it, like Git hashes and
-      invalid card numbers. The second has 100 prompt-injection cases, including innocent
-      sentences that use words like "ignore" and "developer mode". The browser engine is also
-      checked against the original Python engine, finding by finding, on every commit.
+      invalid card numbers. The second has 159 prompt-injection cases in nine languages,
+      including innocent sentences built to trip it, like "don't ignore the instructions on
+      the label". The browser engine runs the exact pattern table the Python engine exports, and
+      is checked against it, finding by finding, on every commit.
     </p>
   </div>
 
@@ -506,6 +568,22 @@
     </section>
   </div>
 
+  <!-- ============ benchmarks (numbers generated by harness/run_injection_eval.py) ============ -->
+  <section class="panel bench-panel" id="bench-panel" hidden aria-labelledby="bench-title">
+    <div class="panel-title"><h2 id="bench-title">How accurate is the hijack screen?</h2><span class="rule"></span><span class="hint" id="bench-date"></span></div>
+    <p class="bench-sub">
+      Measured on <b>public datasets it was never tuned on</b>: the patterns were written against
+      the training splits; these are the held-out test splits plus two sets never used at all.
+      Each bar shows the 95% confidence interval; the tick is the measured rate.
+    </p>
+    <div class="bench-grid">
+      <div class="bench-col" id="bench-fp"></div>
+      <div class="bench-col" id="bench-det"></div>
+    </div>
+    <div class="bench-legend" id="bench-legend"></div>
+    <p class="bench-note" id="bench-note"></p>
+  </section>
+
   <!-- ============ audit ============ -->
   <section class="panel audit-panel">
     <div class="panel-title"><h2>Audit log</h2><span class="rule"></span></div>
@@ -531,13 +609,15 @@
 
   <footer>
     <span>Gatekeep · MIT license · <a href="https://github.com/ntrabazo/gatekeep" target="_blank" rel="noopener">github.com/ntrabazo/gatekeep</a></span>
-    <span>The same detection engine as the Python proxy, ported to JavaScript and parity-tested on all 150 test prompts.</span>
+    <span>The same detection engine as the Python proxy, ported to JavaScript and parity-tested on 209 test prompts and 4,196 public benchmark texts.</span>
   </footer>
 </div>
 
-<script src="gatekeep.js?v=20260907"></script>
-<script src="corpus.js?v=20260907"></script>
-<script src="injection_corpus.js?v=20260907"></script>
+<script src="injection_patterns.js?v=20261008"></script>
+<script src="gatekeep.js?v=20261008"></script>
+<script src="corpus.js?v=20261008"></script>
+<script src="injection_corpus.js?v=20261008"></script>
+<script src="eval_results.js?v=20261008"></script>
 <script>
 (function () {
   "use strict";
@@ -645,6 +725,11 @@
     ["Fake </system> tags", INJ_CORPUS, 29],
     ["Markdown image with a tracking URL", INJ_CORPUS, 41],
     ["“Ignore…” in look-alike letters", INJ_CORPUS, 44],
+    ["“Ingore all prevous instrucitons…”", INJ_CORPUS, 138],
+    ["“Забудьте все инструкции…” (Russian)", INJ_CORPUS, 145],
+    ["A persona prompt: “…an AI model known as DUDE”", INJ_CORPUS, 154],
+    ["“Please do not ignore the previous instructions…”", INJ_CORPUS, 108],
+    ["“Forget what I said before, the meeting is…”", INJ_CORPUS, 100],
   ];
   const DEFAULT_EXAMPLE = 1; // job candidate's SSN and email
 
@@ -678,6 +763,99 @@
 
   function setActive(btn) {
     for (const b of exButtons) b.setAttribute("aria-pressed", String(b === btn));
+  }
+
+  /* ---------- benchmarks panel: renders demo/eval_results.js verbatim ---------- */
+  function renderBenchmarks() {
+    const R = window.GatekeepEvalResults;
+    if (!R) return;
+    const pct = (x, digits) => (x * 100).toFixed(digits) + "%";
+    const digitsFor = (x) => (x > 0 && x < 0.01 ? 2 : 1);
+    const hasJudge = R.detection.some((r) => r.judge);
+
+    function gauge(row, scale) {
+      const g = el("div", "gauge");
+      g.setAttribute("aria-hidden", "true");
+      const place = (c, cls) => {
+        const clamp = (v) => Math.min(1, v / scale) * 100;
+        const band = el("span", "band" + cls);
+        band.style.left = clamp(c.lo) + "%";
+        band.style.width = Math.max(0, clamp(c.hi) - clamp(c.lo)) + "%";
+        const tick = el("span", "tick" + cls);
+        tick.style.left = clamp(c.k / c.n) + "%";
+        g.append(band, tick);
+      };
+      place(row.tier1, "");
+      if (row.judge) place(row.judge, " j");
+      return g;
+    }
+
+    function rowsInto(col, rows, kicker, scale, hero) {
+      const k = el("div", "bench-kicker");
+      k.append(el("span", null, kicker), el("span", null, "scale 0–" + pct(scale, 0)));
+      col.appendChild(k);
+      const h = el("div", "bench-hero");
+      const fig = el("div", "bench-figure");
+      const v = hero.tier1.k / hero.tier1.n;
+      fig.append(pct(v, digitsFor(v)).replace("%", ""));
+      fig.appendChild(el("small", null, "%"));
+      if (hero.judge && hero.judge.k !== hero.tier1.k) {
+        const jv = hero.judge.k / hero.judge.n;
+        fig.appendChild(el("span", "plus", "→ " + pct(jv, digitsFor(jv))));
+      }
+      h.appendChild(fig);
+      col.appendChild(h);
+      col.appendChild(el("div", "bench-caption", hero.caption));
+      const ul = el("ul", "bench-rows");
+      for (const r of rows) {
+        const li = el("li", "bench-row");
+        const head = el("div", "bench-row-head");
+        const name = el("div");
+        name.append(el("span", "bench-name", r.name), el("span", "bench-what", r.what));
+        const val = el("div", "bench-val");
+        const t = r.tier1.k / r.tier1.n;
+        val.append(pct(t, digitsFor(t)) + " ");
+        val.appendChild(el("span", "n", "(" + r.tier1.k + "/" + r.tier1.n + ")"));
+        if (r.judge && r.judge.k !== r.tier1.k) {
+          const j = r.judge.k / r.judge.n;
+          val.appendChild(document.createElement("br"));
+          val.appendChild(el("span", "j", "+judge " + pct(j, digitsFor(j))));
+        }
+        head.append(name, val);
+        li.append(head, gauge(r, scale));
+        ul.appendChild(li);
+      }
+      col.appendChild(ul);
+    }
+
+    const fp = R.falsePositives.filter((r) => !/pooled/i.test(r.name));
+    const pooled = R.falsePositives.find((r) => /pooled/i.test(r.name));
+    rowsInto($("bench-fp"), fp, "False alarms · lower is better", 0.10, {
+      tier1: pooled.tier1, judge: pooled.judge,
+      caption: pooled.tier1.k + " of " + pooled.tier1.n.toLocaleString("en-US") +
+        " harmless held-out prompts wrongly flagged by the pattern engine" +
+        (pooled.judge ? " (" + pooled.judge.k + " with the LLM judge)" : "") +
+        ", including 339 written to look like attacks.",
+    });
+    const gandalf = R.detection[0];
+    rowsInto($("bench-det"), R.detection, "Attacks caught · higher is better", 1.0, {
+      tier1: gandalf.tier1, judge: gandalf.judge,
+      caption: "of real players' attacks from Lakera's Gandalf game" +
+        (hasJudge ? ": pattern engine alone → with the optional LLM judge." : ", caught by the pattern engine alone."),
+    });
+
+    const lg = $("bench-legend");
+    const item = (cls, text) => { const s = el("span"); s.appendChild(el("i", cls)); s.append(text); return s; };
+    lg.appendChild(item("lg-t", "Pattern engine: what runs in this page, offline"));
+    if (hasJudge) lg.appendChild(item("lg-j", "+ optional LLM judge (" + R.judgeModel + ", proxy only, needs an API key)"));
+
+    $("bench-note").innerHTML =
+      "deepset is shown twice: as published, and with 17 off-topic rows removed (e.g. “translate to polish”) " +
+      "that a news-site bot counted as attacks; every removed row is listed by hash in the repo. Static benchmarks " +
+      "measure easy attacks, not an attacker who adapts. Method, licenses, and limitations: " +
+      '<a href="https://github.com/ntrabazo/gatekeep/blob/master/EVAL_CARD.md" target="_blank" rel="noopener">EVAL_CARD.md ↗</a>';
+    $("bench-date").textContent = "block line " + R.threshold.toFixed(2) + " · " + R.generated;
+    $("bench-panel").hidden = false;
   }
 
   /* ---------- self-test: replay both corpora in-browser ---------- */
@@ -1021,6 +1199,7 @@
   });
 
   selfTest();
+  renderBenchmarks();
 
   // Open on a real example so the page never starts empty.
   const first = exButtons[DEFAULT_EXAMPLE];
