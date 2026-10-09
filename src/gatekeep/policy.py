@@ -6,6 +6,7 @@ from typing import Literal
 
 from .config import Policies
 from .detectors import Finding
+from .detectors.injection import document_score
 
 _SEVERITY = {"allow": 0, "redact": 1, "block": 2}
 
@@ -15,7 +16,7 @@ class Decision:
     action: Literal["block", "redact", "allow"]
     redacted_texts: list[str] = field(default_factory=list)
     matched_rules: list[str] = field(default_factory=list)  # "category:action" per finding
-    injection_score: float = 0.0                            # max score across injection findings
+    injection_score: float = 0.0                            # document score (same as /v1/screen + eval card)
     injection_categories: list[str] = field(default_factory=list)  # distinct techniques
 
 
@@ -51,7 +52,9 @@ def decide(texts: list[str], findings_per_text: list[list[Finding]], policies: P
             if _SEVERITY[fa] > _SEVERITY[action]:
                 action = fa
 
-    injection_score = max((f.score for f in injection_findings), default=0.0)
+    # The SAME aggregate the eval card measures and /v1/screen returns, so a prompt the card
+    # counts as caught is exactly a prompt enforce mode blocks.
+    injection_score = document_score(injection_findings)
     injection_categories = sorted({f.detector for f in injection_findings})
     if injection_findings:
         cfg = policies.injection

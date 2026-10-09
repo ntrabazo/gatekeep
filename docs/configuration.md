@@ -26,8 +26,8 @@ injection:
   enabled: true
   mode: shadow          # shadow = log-and-allow (default) | enforce = block at threshold
   block_threshold: 0.8  # enforce mode blocks when the document score is >= this
-  judge_enabled: false  # Tier-2 LLM-judge seam — inert in v1
-  judge_band: [0.3, 0.7]
+  judge_enabled: false  # Tier-2 LLM judge (claude-haiku-5-5) — opt-in, one API call per judged prompt
+  judge_band: [0.0, 0.8]  # judge when band[0] <= Tier-1 score < band[1]
 
 # Category -> action. First matching rule wins.
 rules:
@@ -56,7 +56,8 @@ routing:
 | `injection.enabled` | Master switch for the prompt-injection detector. |
 | `injection.mode` | `shadow` scores + logs but always allows (default); `enforce` blocks (403) at/above `block_threshold`. |
 | `injection.block_threshold` | Document score at/above which `enforce` mode blocks. `0.8` default. |
-| `injection.judge_enabled` / `injection.judge_band` | Inert Tier-2 (LLM judge) seam — see [injection.md](injection.md). |
+| `injection.judge_enabled` | Turn on the Tier-2 LLM judge (off by default). Uses the request's `x-api-key`, else `ANTHROPIC_API_KEY`; fails open to Tier 1. |
+| `injection.judge_band` | Judge when `band[0] <= Tier-1 score < band[1]`. `[0.0, 0.8]` judges every prompt Tier 1 doesn't block; `[0.3, 0.8]` judges only suspicious ones. See [injection.md](injection.md). |
 | `rules` | Ordered list mapping a finding `category` to an `action`. First match wins. |
 | `default_action` | Applied to findings no rule matches. |
 | `routing` | Optional model swaps keyed on the decision action. No match = requested model is left unchanged. |

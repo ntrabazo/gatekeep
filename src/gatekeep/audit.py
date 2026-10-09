@@ -26,7 +26,7 @@ CREATE TABLE IF NOT EXISTS audit_events (
     model_routed    TEXT,            -- NULL when no upstream call (block / reject_stream)
     status_upstream INTEGER,         -- NULL when no upstream call
     latency_ms      REAL,
-    injection_score REAL,            -- max injection finding score for the request (0.0 = none)
+    injection_score REAL,            -- injection document score for the request (0.0 = none)
     injection_categories TEXT        -- csv of techniques, e.g. "instruction_override,obfuscation"
 )
 """

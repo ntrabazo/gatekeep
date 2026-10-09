@@ -1,0 +1,41 @@
+{
+ "commit": "920f2dd",
+ "rows": {
+  "NotInject": [
+   7,
+   339
+  ],
+  "Dolly-15k sample": [
+   0,
+   999
+  ],
+  "jackhhao benign": [
+   0,
+   122
+  ],
+  "deepset legit": [
+   0,
+   56
+  ],
+  "**All benign, pooled**": [
+   7,
+   1516
+  ],
+  "Gandalf (Lakera)": [
+   71,
+   112
+  ],
+  "jackhhao jailbreaks": [
+   53,
+   133
+  ],
+  "deepset, security-scoped": [
+   15,
+   43
+  ],
+  "deepset, raw": [
+   15,
+   60
+  ]
+ }
+}

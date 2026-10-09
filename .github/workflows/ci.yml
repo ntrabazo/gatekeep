@@ -19,6 +19,8 @@ jobs:
       - run: pip install -r requirements.txt
       - name: Run offline red-team harness (exit 0 = 100% catch, 0 false positives)
         run: python harness/run_harness.py
+      - name: Demo pattern table matches the Python engine (generated, never hand-ported)
+        run: python demo/dump_expected.py --check
 
   parity:
     name: JS/Python parity (demo port)

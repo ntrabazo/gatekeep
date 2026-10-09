@@ -2,7 +2,8 @@
  * Gatekeep detection engine — JavaScript port for the static demo page.
  *
  * Ported 1:1 from the Python engine (src/gatekeep/detectors/secrets.py,
- * detectors/pii.py, detectors/normalize.py, detectors/injection.py,
+ * detectors/pii.py, detectors/normalize.py, detectors/injection.py (whose
+ * pattern table is GENERATED into injection_patterns.js, not hand-ported),
  * policy.py, router.py). The policies.yaml values are inlined in POLICIES
  * below; policies.yaml stays the source of truth.
  *
@@ -29,8 +30,8 @@
       enabled: true,
       mode: "shadow", // shadow = log-and-allow (default) | enforce = block at threshold
       blockThreshold: 0.8,
-      judgeEnabled: false, // Tier-2 seam — inert in v1 (PLAN-injection.md §16)
-      judgeBand: [0.3, 0.7],
+      judgeEnabled: false, // Tier-2 LLM judge: proxy-side only (needs an API key), never in the browser
+      judgeBand: [0.0, 0.8],
     },
     rules: [
       { category: "secret", action: "block" },
@@ -207,9 +208,59 @@
     "Ρ": "P", "Τ": "T", "Υ": "Y", "Χ": "X",
   };
 
+  // Generated from the Python pattern table (demo/injection_patterns.js), so both engines
+  // run byte-identical regexes. Node: require; browser: the script tag loads it first.
+  const PT = typeof module === "object" && module.exports
+    ? require("./injection_patterns.js")
+    : self.GatekeepInjectionPatterns;
+
+  // Python's \s (str.isspace) also covers \x1c-\x1f and \x85; JS's \s does not.
+  const WS_RUN = /[\s\x1c-\x1f\x85]+/g;
+  const TYPO_KEYWORDS = PT.typoKeywords;
+  const TYPO_STOPLIST = new Set(PT.typoStoplist);
+
+  // Optimal-string-alignment edit distance (Levenshtein + adjacent transposition).
+  function osaDistance(a, b) {
+    let prev2 = [];
+    let prev = Array.from({ length: b.length + 1 }, (_, j) => j);
+    for (let i = 1; i <= a.length; i++) {
+      const cur = [i].concat(new Array(b.length).fill(0));
+      for (let j = 1; j <= b.length; j++) {
+        const cost = a[i - 1] === b[j - 1] ? 0 : 1;
+        cur[j] = Math.min(prev[j] + 1, cur[j - 1] + 1, prev[j - 1] + cost);
+        if (i > 1 && j > 1 && a[i - 1] === b[j - 2] && a[i - 2] === b[j - 1]) {
+          cur[j] = Math.min(cur[j], prev2[j - 2] + 1);
+        }
+      }
+      prev2 = prev;
+      prev = cur;
+    }
+    return prev[b.length];
+  }
+
+  // Fold a one-edit misspelling of a pattern keyword ("intructions") back to the keyword.
+  function foldWord(word) {
+    const low = word.toLowerCase();
+    if (low.length < 5 || TYPO_KEYWORDS.includes(low) || TYPO_STOPLIST.has(low)) return word;
+    for (const kw of TYPO_KEYWORDS) {
+      if (low[0] === kw[0] && Math.abs(low.length - kw.length) <= 1 && !low.startsWith(kw) &&
+          osaDistance(low, kw) === 1) return kw;
+    }
+    return word;
+  }
+
+  // Fold lookalikes only inside MIXED-script words: a wholly Cyrillic word is just Russian.
+  function foldHomoglyphs(token) {
+    if (!/[A-Za-z]/.test(token)) return token;
+    let out = "";
+    for (const c of token) out += HOMOGLYPHS[c] || c;
+    return out;
+  }
+
   function normalize(text) {
-    // Returns { text, obfuscationPresent } — NFKC, strip zero-width, fold homoglyphs,
-    // collapse whitespace. Plain NFD→NFC composition does NOT trip the flag.
+    // Returns { text, obfuscationPresent } — NFKC, strip zero-width, collapse whitespace,
+    // fold mixed-script homoglyphs, fold keyword typos. Plain NFD→NFC composition and
+    // typos do NOT trip the flag.
     const nfkc = text.normalize("NFKC");
     const compatChanged = nfkc !== text.normalize("NFC");
 
@@ -217,114 +268,33 @@
     for (const c of nfkc) if (!ZERO_WIDTH.has(c)) withoutZw += c;
     const zwFound = withoutZw.length !== nfkc.length;
 
-    let folded = "";
-    for (const c of withoutZw) folded += HOMOGLYPHS[c] || c;
-    const foldFound = folded !== withoutZw;
+    const collapsed = withoutZw.replace(WS_RUN, " ").trim();
+    const folded = collapsed.split(" ").map(foldHomoglyphs).join(" ");
+    const foldFound = folded !== collapsed;
 
-    const collapsed = folded.replace(/\s+/g, " ").trim();
-    return { text: collapsed, obfuscationPresent: !!(compatChanged || zwFound || foldFound) };
+    return {
+      text: folded.replace(/[A-Za-z]+/g, foldWord),
+      obfuscationPresent: !!(compatChanged || zwFound || foldFound),
+    };
   }
 
   // ---- detectors/injection.py ---------------------------------------------
-  // Structure-keyed patterns (verb + object shape, never bare trigger words),
-  // ported 1:1. Spans reference NORMALIZED-text offsets, exactly like Python.
-  const _NOUNS = "(?:instructions?|prompts?|rules?|directives?|guidelines?|constraints?|commands?|context|programming|training)";
-  const _LEAK_VERBS = "(?:print|show|reveal|repeat|output|display|disclose|leak|expose|share|tell\\s+me|give\\s+me|recite|dump|paste)";
-  const _EXFIL_VERBS = "(?:send|forward|post|upload|email|exfiltrate|transmit|leak|submit)";
-  const _EXFIL_PAYLOAD =
-    "(?:conversation|chat\\s+history|message\\s+history|(?:this|the|our)\\s+(?:chat|conversation|thread|context)" +
-    "|secrets?|credentials?|api\\s+keys?|passwords?|tokens?|everything\\s+above|the\\s+above)";
-
-  // technique -> [[regex, weight]]
-  const INJECTION_PATTERNS = {
-    instruction_override: [
-      [new RegExp(
-        "\\b(?:ignore|disregard|forget|override|bypass|discard|drop)\\b[^.?!\\n]{0,40}" +
-        "\\b(?:previous|prior|above|earlier|preceding|initial|original|all|any|your|these|those|system|the)\\b" +
-        "[^.?!\\n]{0,40}\\b" + _NOUNS + "\\b", "gi"), 0.85],
-      [new RegExp("\\b(?:ignore|disregard|forget)\\b[^.?!\\n]{0,20}\\babove\\b[^.?!\\n]{0,20}\\b(?:and|instead)\\b", "gi"), 0.85],
-      [new RegExp("\\bnew\\s+(?:instructions?|rules?|directives?)\\s*:", "gi"), 0.8],
-      // Reset idiom: "forget everything we discussed", "disregard all that came before".
-      [new RegExp(
-        "\\b(?:forget|disregard|ignore)\\s+(?:about\\s+)?(?:everything|all)\\b[^.?!\\n]{0,40}" +
-        "\\b(?:before|above|previous|prior|so\\s+far|earlier|that\\s+(?:came|was)\\s+before" +
-        "|we(?:'ve|\\s+have)?\\s+(?:just\\s+)?(?:talked|discussed|said|covered))\\b", "gi"), 0.85],
-      [new RegExp(
-        "\\b(?:do\\s+not|don'?t|stop|refuse\\s+to)\\s+(?:follow(?:ing)?|obey(?:ing)?|listen\\s+to|comply\\s+with)\\b" +
-        "[^.?!\\n]{0,40}\\b(?:instructions?|rules?|guidelines?|directives?|commands?|orders?|programming" +
-        "|system|above|previous|original)\\b", "gi"), 0.8],
-      // German coverage: deepset/prompt-injections carries German attack rows.
-      [new RegExp(
-        "\\b(?:ignorier\\w*|vergiss|vergesse?n?)\\b[^.?!\\n]{0,50}" +
-        "\\b(?:alles|anweisung\\w*|instruktion\\w*|vorherig\\w*|obig\\w*|regeln)\\b", "gi"), 0.85],
-    ],
-    role_manipulation: [
-      // Persona/capability reassignment — structure-keyed so "you are now logged in" is spared.
-      [new RegExp(
-        "\\byou\\s+are\\s+now\\s+(?:a\\s+|an\\s+|the\\s+)?(?:[a-z]+\\s+){0,3}?" +
-        "(?:ai|assistant|bot|model|chatbot|dan|hacker|persona|character|entity" +
-        "|unrestricted|unfiltered|uncensored|jailbroken)\\b", "gi"), 0.8],
-      [new RegExp(
-        "\\byou\\s+are\\s+no\\s+longer\\s+(?:bound|restricted|limited|required|obligated|constrained" +
-        "|subject\\s+to|claude|an?\\s+ai)\\b", "gi"), 0.8],
-      [new RegExp("\\bfrom\\s+now\\s+on\\b[^.?!\\n]{0,60}\\b(?:you\\s+(?:are|will|must|can|should)|you'?re)\\b", "gi"), 0.8],
-      [new RegExp(
-        "\\b(?:act|pretend|behave|roleplay)\\b[^.?!\\n]{0,30}\\b(?:as\\s+if|as\\s+though|like|as)\\b[^.?!\\n]{0,50}" +
-        "\\b(?:no\\s+(?:rules|restrictions?|limitations?|filters?|guidelines?)|unrestricted|unfiltered|uncensored" +
-        "|jailbro\\w+|DAN|evil|without\\s+(?:any\\s+)?(?:rules|restrictions?|limitations?|filters?|ethic\\w*))", "gi"), 0.85],
-      [new RegExp("\\b(?:DAN\\s+mode|jailbreak|jailbroken)\\b", "gi"), 0.8],
-      // "developer/god mode" only when being activated or declared on — spares "Chrome's developer mode".
-      [new RegExp(
-        "\\b(?:enter|enable|activ\\w+|turn\\s+on|switch\\s+(?:to|into)|go\\s+into|unlock)\\b" +
-        "[^.?!\\n]{0,20}\\b(?:developer|god|dan)\\s+mode\\b", "gi"), 0.8],
-      [new RegExp("\\b(?:developer|god|dan)\\s+mode\\s+(?:enabled|activated|unlocked|is\\s+(?:now\\s+)?on)\\b", "gi"), 0.8],
-      // "no ethical guidelines", "without safety and content filters"
-      [new RegExp(
-        "\\b(?:no|without|free\\s+(?:of|from))\\s+(?:(?:ethical|moral|safety|content)\\b[\\s,]+(?:or\\s+|and\\s+)?){1,3}" +
-        "(?:guidelines?|restrictions?|filters?|constraints?|policies|rules?)\\b", "gi"), 0.8],
-    ],
-    system_prompt_leak: [
-      [new RegExp(
-        "\\b" + _LEAK_VERBS + "\\b[^.?!\\n]{0,40}" +
-        "\\b(?:system\\s+prompt|system\\s+message|initial\\s+(?:prompt|instructions?)" +
-        "|hidden\\s+(?:prompt|instructions?)|pre.?prompt|original\\s+instructions?)\\b", "gi"), 0.85],
-      [new RegExp(
-        "\\b" + _LEAK_VERBS + "\\b[^.?!\\n]{0,30}" +
-        "\\byour\\s+(?:instructions?|prompt|rules|guidelines|directives|configuration|programming)\\b", "gi"), 0.8],
-      [new RegExp(
-        "\\bwhat\\s+(?:is|are|was|were)\\s+(?:your|the)\\s+" +
-        "(?:system\\s+prompt|initial\\s+instructions?|hidden\\s+instructions?|original\\s+prompt)\\b", "gi"), 0.8],
-      // "print the above prompt" (deepset END-marker idiom).
-      [new RegExp(
-        "\\b(?:print|repeat|output|display|reproduce)\\b[^.?!\\n]{0,25}" +
-        "\\b(?:the\\s+)?above\\s+(?:prompt|instructions?|input|system\\s+prompt)\\b", "gi"), 0.8],
-    ],
-    delimiter_injection: [
-      [new RegExp("</?\\s*(?:system|sys|assistant|instructions?|admin)\\s*>", "gi"), 0.8],
-      [new RegExp("\\[\\s*/?\\s*(?:SYSTEM|INST|ADMIN)\\s*\\]", "gi"), 0.8],
-      [new RegExp("<\\|\\s*(?:im_start|im_end|system|user|assistant|endoftext)\\s*\\|?>", "gi"), 0.8],
-      [new RegExp("<<\\s*/?\\s*SYS\\s*>>", "gi"), 0.8],
-      [new RegExp("(?:^|\\s)(?:#{2,}|={3,}|-{3,})\\s*(?:system|admin|new\\s+instructions?)\\b", "gi"), 0.75],
-      [new RegExp("\\bBEGIN\\s+(?:SYSTEM|ADMIN|NEW)\\s+(?:PROMPT|INSTRUCTIONS?|MESSAGE)\\b", "gi"), 0.8],
-    ],
-    exfiltration: [
-      [new RegExp(
-        "\\b" + _EXFIL_VERBS + "\\b[^.?!\\n]{0,60}\\b" + _EXFIL_PAYLOAD + "\\b[^.?!\\n]{0,80}\\b(?:to|at)\\b", "gi"), 0.8],
-      [new RegExp(
-        "\\b" + _EXFIL_VERBS + "\\b[^.?!\\n]{0,80}\\bto\\s+(?:https?://\\S+|[\\w.+-]+@[\\w-]+(?:\\.[\\w-]+)+)", "gi"), 0.75],
-      // Markdown image with a query string: the classic zero-click exfil channel.
-      [new RegExp("!\\[[^\\]]{0,80}\\]\\(\\s*https?://[^)\\s]{1,200}[?&=][^)\\s]*\\)", "gi"), 0.8],
-    ],
-  };
-
-  const OBFUSCATION_WEIGHT = 0.4;
+  // Structure-keyed patterns with evidence accumulation; see the Python module docstring.
+  // technique -> [[RegExp, weight]] — compiled from the generated table, never hand-ported.
+  const INJECTION_PATTERNS = {};
+  for (const technique of Object.keys(PT.patterns)) {
+    INJECTION_PATTERNS[technique] = PT.patterns[technique].map(([src, w, flags]) => [new RegExp(src, flags), w]);
+  }
+  const OBFUSCATION_WEIGHT = PT.obfuscationWeight;
 
   function scanInjection(text) {
+    // One finding per pattern that fires (its first match): repetition is not new evidence.
     const norm = normalize(text);
     const findings = [];
     for (const technique of Object.keys(INJECTION_PATTERNS)) {
       for (const [rx, weight] of INJECTION_PATTERNS[technique]) {
-        for (const m of norm.text.matchAll(rx)) {
+        const m = rx.exec(norm.text);
+        if (m) {
           findings.push({
             category: "injection",
             detector: technique,
@@ -347,12 +317,29 @@
     return findings;
   }
 
-  // Aggregate injection findings to one document score: 1 - Π(1 - w_i), capped at 1.0.
+  // Document score: 1 - Π(1 - w) over evidence CLUSTERS. Overlapping spans are one piece
+  // of evidence (max weight); separate phrases accumulate; obfuscation is its own cluster.
   function documentScore(findings) {
-    let p = 1.0;
-    for (const f of findings) {
-      if (f.category === "injection") p *= 1.0 - Math.min(f.score, 1.0);
+    const inj = findings.filter((f) => f.category === "injection");
+    const weights = inj.filter((f) => f.detector === "obfuscation").map((f) => Math.min(f.score, 1.0));
+    const spans = inj.filter((f) => f.detector !== "obfuscation")
+      .slice()
+      .sort((a, b) => a.span[0] - b.span[0] || a.span[1] - b.span[1]);
+    let end = -1;
+    let best = null;
+    for (const f of spans) {
+      if (best !== null && f.span[0] < end) {
+        end = Math.max(end, f.span[1]);
+        best = Math.max(best, Math.min(f.score, 1.0));
+        continue;
+      }
+      if (best !== null) weights.push(best);
+      end = f.span[1];
+      best = Math.min(f.score, 1.0);
     }
+    if (best !== null) weights.push(best);
+    let p = 1.0;
+    for (const w of weights) p *= 1.0 - w;
     return Math.min(1.0, 1.0 - p);
   }
 
@@ -408,8 +395,9 @@
       }
     }
 
-    let injectionScore = 0.0;
-    for (const f of injectionFindings) injectionScore = Math.max(injectionScore, f.score);
+    // Same aggregate as /v1/screen and the eval card: a prompt the card counts as caught
+    // is exactly a prompt enforce mode blocks.
+    const injectionScore = documentScore(injectionFindings);
     const injectionCategories = [...new Set(injectionFindings.map((f) => f.detector))].sort();
     if (injectionFindings.length) {
       const cfg = policies.injection;

@@ -143,6 +143,31 @@ console.log(`\nINJECTION PARITY (block_threshold = ${threshold})`);
 console.log(`attacks    ${String(injStats.attacks.total).padStart(5)} ${String(injStats.attacks.hit).padStart(5)} ${String(injStats.attacks.total - injStats.attacks.hit).padStart(5)}`);
 console.log(`benign     ${String(injStats.benign.total).padStart(5)} ${String(injStats.benign.hit).padStart(5)} ${String(injStats.benign.total - injStats.benign.hit).padStart(5)}`);
 
+// Local-only: the cached public benchmarks (~4,000 real texts: German, Russian, emoji,
+// 12k-char jailbreaks). demo/expected_heldout.json is gitignored; CI skips this block.
+const heldoutPath = path.join(__dirname, "expected_heldout.json");
+let heldoutChecked = 0;
+if (fs.existsSync(heldoutPath)) {
+  const fileCache = {};
+  const rowsOf = (name) => {
+    if (!fileCache[name]) {
+      fileCache[name] = fs.readFileSync(path.join(root, "harness", "data", name + ".jsonl"), "utf-8").split("\n");
+    }
+    return fileCache[name];
+  };
+  for (const exp of JSON.parse(fs.readFileSync(heldoutPath, "utf-8"))) {
+    const text = JSON.parse(rowsOf(exp.file)[exp.line]).text;
+    const findings = Gatekeep.scanInjection(text);
+    const score = Gatekeep.documentScore(findings);
+    const detectors = [...new Set(findings.map((f) => f.detector))].sort();
+    const where = `  ${exp.file}:${exp.line}`;
+    if (Math.abs(score - exp.score) > 1e-6) failures.push(`${where} score: got ${score}, want ${exp.score}`);
+    check(where, "detectors", detectors, exp.detectors);
+    heldoutChecked += 1;
+  }
+  console.log(`\nBENCHMARK PARITY (local): ${heldoutChecked} real texts scored by both engines`);
+}
+
 if (failures.length) {
   console.log(`\nparity failures (${failures.length}):`);
   console.log(failures.slice(0, 40).join("\n"));
