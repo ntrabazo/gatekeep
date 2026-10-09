@@ -25,7 +25,8 @@ The page does not approximate the engine, it ports it:
   preview, audit CSVs, and SHA-256 — using a golden dump produced by the Python engine.
 
 ```bash
-node demo/parity.test.js               # exit 0 = JS port matches Python on all 150 entries
+node demo/parity.test.js               # exit 0 = JS port matches Python on all 209 entries
+                                       # (+ 4,196 real benchmark texts when harness/data/ is cached)
 ```
 
 ## Regenerating the derived files
@@ -33,12 +34,14 @@ node demo/parity.test.js               # exit 0 = JS port matches Python on all 
 | File | Source of truth | Regenerate with |
 |---|---|---|
 | `corpus.js` | `harness/corpus.jsonl` | `node demo/build_corpus.js` |
-| `expected.json` | the Python engine | `.venv/Scripts/python demo/dump_expected.py` |
+| `expected.json`, `expected_injection.json` | the Python engine | `.venv/Scripts/python demo/dump_expected.py` |
+| `injection_patterns.js` | `src/gatekeep/detectors/injection.py` (`RAW_PATTERNS`) | same command — never hand-edit; CI runs `--check` |
+| `eval_results.js` | held-out benchmarks | `.venv/Scripts/python harness/run_injection_eval.py` |
 
 Rerun both plus `parity.test.js` after any detector, policy, or corpus change.
 
 ## Hosting
 
-The page is four static files: `index.html`, `gatekeep.js`, `corpus.js`,
-`injection_corpus.js`. Any static host
+The page is six static files: `index.html`, `injection_patterns.js`, `gatekeep.js`,
+`corpus.js`, `injection_corpus.js`, `eval_results.js`. Any static host
 works (Cloudflare Pages, GitHub Pages, S3). No build step.

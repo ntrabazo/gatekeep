@@ -208,6 +208,27 @@ Build this only after v1 ships and Nicolas okays a v2 pass. v1 already carries t
 - **Verification when built:** flag off → harness still makes zero network calls (offline green preserved); flag on + a band-scoring input with `ANTHROPIC_API_KEY` present → `/v1/screen` shows the judge-refined score and `tier:"judge"`; key absent → paste the `"judge skipped: no key — fail-open to tier1"` branch.
 - **Eval card update in v2:** add a "Tier-2 (judge) enabled" column so reviewers see the deterministic Tier-1 numbers and the judge-assisted numbers side by side — the determinism of Tier-1 stays visible.
 
+## 17. v1.1 — benchmark realignment + Tier-1 tuning + Tier-2 judge (BUILT 2026-10-08, branch `feat/eval-v2`)
+Trigger: v1's deepset catch rate was 25%, and part of that benchmark does not measure what Gatekeep claims to detect. This pass realigned the benchmark suite so every published false-positive and detection number is defensible, tuned Tier 1 against train splits only, and shipped the judge. This section is the spec of record for that pass; §16's judge design is superseded where it differs.
+
+**Diagnosis.** deepset/prompt-injections was built for one German news-QA bot: its legit rows are news queries, so any off-topic request is labelled an injection. Of its 45 unique test attacks, 13 carried no injection mechanism by the turn-1 count; the final published scope file excludes 11 unique rows (17 with composites) after keeping 2 borderline rows in scope.
+
+**Methodology (non-negotiable for any future tuning).**
+- Benchmarks: Gandalf (Lakera, MIT), jackhhao jailbreak-classification (Apache-2.0), deepset (Apache-2.0) — tune on `*_train`, report `*_test`; NotInject (MIT) and a fixed-seed 1,000-row Dolly-15k sample (CC-BY-SA-3.0) — never tuned on. `harness/fetch_datasets.py` fetches all; `harness/benchmarks.py` is the held-out registry; held-out rows duplicated in any train split are dropped.
+- deepset reported raw AND security-scoped; exclusions fixed before held-out scoring, published by SHA-256 + reason in `harness/deepset_scope.json` (`harness/build_deepset_scope.py`). Borderline rows stay in scope.
+- Held-out scored once after Tier-1 froze; no pattern changed after seeing held-out results. Wilson 95% CIs on every rate. v1 comparison via `harness/baseline_v1.py` (runs the v1 detector from git, same rows).
+- Judge rubric revised once (r1 → r2) on 80 TRAIN rows only; held-out judged only with r2.
+
+**Tier-1 changes.** 122 patterns, `re.ASCII` (JS-identical `\b`/`\w`); evidence accumulation — STRONG ≥ 0.8 blocks alone, MEDIUM 0.6 / WEAK 0.45 only in combination; one finding per pattern; document score = noisy-OR over overlap clusters (max weight per cluster). Negation guard (`_NOT`), soft vs hard override verbs, multilingual overrides (DE/ES/FR/IT/PT/RU/BCS/NL/PL, imperative forms only), jailbreak cue lexicon, invalidation phrasings, extraction questions. Normalizer: mixed-script-only homoglyph fold (fixed: pure-Russian text tripped obfuscation), one-edit keyword typo fold (OSA, same first letter, no inflections). Bug fixes: negation FPs, bare "jailbreak" (all 7 v1 NotInject FPs), `DAN` prefix of "dancing", proxy enforce decision used max score while card/screen used document score (now all use `document_score`).
+
+**Tier-2 judge (shipped, opt-in).** `detectors/injection_judge.py`: `claude-haiku-5-5` (verified via Models API), `max_tokens=64`, thinking disabled, effort low, JSON-schema `{injection, confidence}` → `0.5 ± c/200`; fails open on any error/refusal/missing key. `judge_band` default `[0.0, 0.8)` (all non-blocked; §16's `[0.3, 0.7]` would never fire — misses score 0.00); `[0.3, 0.8)` is the low-FPR setting. Uses caller's `x-api-key` (proxy holds no key), else `ANTHROPIC_API_KEY`; on `/v1/messages` judges conversation messages only, not the system prompt. Headers gain `X-Gatekeep-Injection-Tier`. Verdict cache `harness/data/judge_cache.jsonl` (SHA-256 keys only, gitignored) keeps the card offline-reproducible.
+
+**Held-out results (EVAL_CARD.md).** Pooled benign FPR 0.07% Tier-1 / 0.66% +judge (1,516 rows); NotInject 0.29% / 1.8%; Gandalf 72.3% / 93.8%; jackhhao 68.4% / 95.5%; deepset scoped 48.8% / 83.7%, raw 35.0% / 60.0%. Judge flags 0/17 excluded deepset rows (independent support for the scope file).
+
+**Demo.** Pattern table GENERATED into `demo/injection_patterns.js` by `demo/dump_expected.py` (CI `--check` fails if stale); parity on 209 corpus entries + 4,196 local benchmark texts; benchmark panel renders generated `demo/eval_results.js`.
+
+**Known follow-ups (not done).** Indirect-injection benchmark (BIPIA / InjecAgent / AgentDojo); per-technique overlap clustering (would stop greedy override spans from absorbing a distinct leak finding) — only with a fresh held-out set, since this one has been seen.
+
 ---
 
 ## Changelog — what the review loop caught and fixed (v1 → v2)
