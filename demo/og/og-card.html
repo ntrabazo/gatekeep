@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Gatekeep link preview (source for og.png)</title>
+<!--
+  Source for demo/og.png, the 1200x630 social preview. Render with headless Edge:
+  msedge --headless=new --hide-scrollbars --window-size=1200,630 --virtual-time-budget=8000
+         --screenshot=demo/og.png file:///.../demo/og/og-card.html
+  No animations: headless virtual time freezes them.
+-->
+<link href="https://fonts.googleapis.com/css2?family=Cormorant:ital,wght@0,400;1,400;1,500&family=JetBrains+Mono:wght@400;500&family=Outfit:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { width: 1200px; height: 630px; overflow: hidden; }
+  body {
+    background:
+      radial-gradient(900px 480px at 78% -10%, rgba(196, 163, 90, 0.16), transparent 62%),
+      radial-gradient(700px 420px at -5% 110%, rgba(182, 166, 242, 0.08), transparent 60%),
+      #0b0b0f;
+    color: #ece8de;
+    font-family: "Outfit", sans-serif;
+    position: relative;
+  }
+  .frame { position: absolute; inset: 34px; border: 1px solid rgba(196, 163, 90, 0.22); }
+  .inner { position: absolute; inset: 34px; padding: 62px 72px; display: flex; flex-direction: column; }
+  .kicker {
+    font-family: "JetBrains Mono", monospace; font-size: 17px; letter-spacing: 0.26em;
+    text-transform: uppercase; color: #c4a35a; display: flex; align-items: center; gap: 16px;
+  }
+  .kicker svg { flex: none; }
+  h1 {
+    font-family: "Cormorant", serif; font-style: italic; font-weight: 500;
+    font-size: 132px; line-height: 0.95; letter-spacing: -0.01em; color: #c4a35a; margin-top: 26px;
+  }
+  .lede { font-size: 31px; line-height: 1.38; color: #d8d3c7; max-width: 880px; margin-top: 22px; }
+  .lede b { color: #ece8de; font-weight: 500; }
+  .verdicts { display: flex; gap: 14px; margin-top: auto; }
+  .v {
+    font-family: "JetBrains Mono", monospace; font-size: 18px; letter-spacing: 0.12em;
+    text-transform: uppercase; padding: 11px 18px; border: 1px solid; display: flex; align-items: center; gap: 10px;
+  }
+  .v i { width: 9px; height: 9px; border-radius: 50%; display: inline-block; }
+  .v.block { color: #ef6f6f; border-color: rgba(239, 111, 111, 0.45); } .v.block i { background: #ef6f6f; }
+  .v.redact { color: #e8b04a; border-color: rgba(232, 176, 74, 0.45); } .v.redact i { background: #e8b04a; }
+  .v.screen { color: #b6a6f2; border-color: rgba(182, 166, 242, 0.45); } .v.screen i { background: #b6a6f2; }
+  .url {
+    position: absolute; right: 72px; bottom: 66px; font-family: "JetBrains Mono", monospace;
+    font-size: 18px; color: #918b80; letter-spacing: 0.04em;
+  }
+</style>
+</head>
+<body>
+  <div class="frame"></div>
+  <div class="inner">
+    <div class="kicker">
+      <svg width="30" height="30" viewBox="0 0 32 32" fill="none" aria-hidden="true">
+        <path d="M8 5h16v13c0 5-4 8-8 9-4-1-8-4-8-9z" stroke="#c4a35a" stroke-width="2"/>
+        <path d="M12 15h8M16 11v8" stroke="#c4a35a" stroke-width="2"/>
+      </svg>
+      Prompt firewall · live demo
+    </div>
+    <h1>Gatekeep</h1>
+    <p class="lede">Checks every prompt before it reaches the Claude API. <b>Blocks secrets, redacts personal data,
+      and screens for <span style="white-space:nowrap">prompt-injection</span> attacks.</b> Runs entirely in your browser.</p>
+    <div class="verdicts">
+      <span class="v block"><i></i>Blocked</span>
+      <span class="v redact"><i></i>Redacted</span>
+      <span class="v screen"><i></i>Hijack screened</span>
+    </div>
+  </div>
+  <div class="url">nicolastrabazo.com/gatekeep</div>
+</body>
+</html>

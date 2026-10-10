@@ -43,5 +43,6 @@ Rerun both plus `parity.test.js` after any detector, policy, or corpus change.
 ## Hosting
 
 The page is six static files: `index.html`, `injection_patterns.js`, `gatekeep.js`,
-`corpus.js`, `injection_corpus.js`, `eval_results.js`. Any static host
+`corpus.js`, `injection_corpus.js`, `eval_results.js`, plus `og.png` (the link-preview image,
+rendered from `og/og-card.html` with headless Edge). Any static host
 works (Cloudflare Pages, GitHub Pages, S3). No build step.
